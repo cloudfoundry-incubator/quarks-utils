@@ -3,11 +3,11 @@ module code.cloudfoundry.org/quarks-utils
 go 1.13
 
 require (
-	code.cloudfoundry.org/cf-operator v0.4.1
+	code.cloudfoundry.org/cf-operator v0.4.2-0.20190925122657-30f4e063e8ba
+	code.cloudfoundry.org/quarks-job v0.0.0-20190925141312-a044bc7057cf
 	github.com/onsi/ginkgo v1.10.1
 	github.com/onsi/gomega v1.6.0
 	github.com/pkg/errors v0.8.1
-	github.com/spf13/afero v1.2.2
 	go.uber.org/zap v1.10.0
 	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d

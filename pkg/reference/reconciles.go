@@ -16,7 +16,7 @@ import (
 	log "code.cloudfoundry.org/cf-operator/pkg/kube/util/ctxlog"
 	vss "code.cloudfoundry.org/cf-operator/pkg/kube/util/versionedsecretstore"
 
-	qjv1 "code.cloudfoundry.org/quarks-job/pkg/kube/apis/extendedjob/v1alpha1"
+	ejv1 "code.cloudfoundry.org/quarks-job/pkg/kube/apis/extendedjob/v1alpha1"
 )
 
 // ReconcileType lists all the types of reconciliations we can return,
@@ -218,9 +218,9 @@ func listExtendedStatefulSets(ctx context.Context, client crc.Client, namespace 
 	return result, nil
 }
 
-func listExtendedJobs(ctx context.Context, client crc.Client, namespace string) (*qjv1.ExtendedJobList, error) {
+func listExtendedJobs(ctx context.Context, client crc.Client, namespace string) (*ejv1.ExtendedJobList, error) {
 	log.Debugf(ctx, "Listing ExtendedJobs in namespace '%s'", namespace)
-	result := &qjv1.ExtendedJobList{}
+	result := &ejv1.ExtendedJobList{}
 	err := client.List(ctx, result)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list ExtendedJobs")

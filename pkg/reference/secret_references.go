@@ -10,8 +10,9 @@ import (
 
 	"code.cloudfoundry.org/cf-operator/pkg/bosh/converter"
 	bdv1 "code.cloudfoundry.org/cf-operator/pkg/kube/apis/boshdeployment/v1alpha1"
-	ejobv1 "code.cloudfoundry.org/cf-operator/pkg/kube/apis/extendedjob/v1alpha1"
 	estsv1 "code.cloudfoundry.org/cf-operator/pkg/kube/apis/extendedstatefulset/v1alpha1"
+
+	ejv1 "code.cloudfoundry.org/quarks-job/pkg/kube/apis/extendedjob/v1alpha1"
 )
 
 // GetSecretsReferencedBy returns a list of all names for Secrets referenced by the object
@@ -20,7 +21,7 @@ func GetSecretsReferencedBy(ctx context.Context, client crc.Client, object inter
 	switch object := object.(type) {
 	case bdv1.BOSHDeployment:
 		return getSecretRefFromBdpl(ctx, client, object)
-	case ejobv1.ExtendedJob:
+	case ejv1.ExtendedJob:
 		return getSecretRefFromEJob(object), nil
 	case estsv1.ExtendedStatefulSet:
 		return getSecretRefFromESts(object), nil
@@ -59,7 +60,7 @@ func getSecretRefFromESts(object estsv1.ExtendedStatefulSet) map[string]bool {
 	return getSecretRefFromPod(object.Spec.Template.Spec.Template.Spec)
 }
 
-func getSecretRefFromEJob(object ejobv1.ExtendedJob) map[string]bool {
+func getSecretRefFromEJob(object ejv1.ExtendedJob) map[string]bool {
 	return getSecretRefFromPod(object.Spec.Template.Spec)
 }
 

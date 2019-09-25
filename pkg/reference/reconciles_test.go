@@ -13,8 +13,9 @@ import (
 	estsv1 "code.cloudfoundry.org/cf-operator/pkg/kube/apis/extendedstatefulset/v1alpha1"
 	"code.cloudfoundry.org/cf-operator/pkg/kube/controllers"
 	cfakes "code.cloudfoundry.org/cf-operator/pkg/kube/controllers/fakes"
-	"code.cloudfoundry.org/cf-operator/pkg/kube/util/reference"
 	"code.cloudfoundry.org/cf-operator/testing"
+
+	"code.cloudfoundry.org/quarks-utils/pkg/reference"
 )
 
 var _ = Describe("GetReconciles", func() {
