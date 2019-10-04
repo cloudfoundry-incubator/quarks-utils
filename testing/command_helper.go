@@ -187,9 +187,10 @@ func (k *Kubectl) WaitLabelFilter(namespace string, requiredStatus string, resou
 // checkPodReadyLabelFilter checks is the pod status is completed
 func (k *Kubectl) checkPodReadyLabelFilter(namespace string, resourceName string, labelName string, requiredStatus string) (bool, error) {
 	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "wait", resourceName, "-l", labelName, "--for=condition="+requiredStatus)
-		if strings.Contains(string(out), "no matching resources found") {
-			return false, nil
-		}
+	if strings.Contains(string(out), "no matching resources found") {
+		return false, nil
+	}
+	if err != nil {
 		return false, errors.Wrapf(err, "Kubectl wait failed for %s with status %s. %s", resourceName, requiredStatus, string(out))
 	}
 	return true, nil
