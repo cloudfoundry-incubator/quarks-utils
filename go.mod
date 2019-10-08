@@ -3,9 +3,9 @@ module code.cloudfoundry.org/quarks-utils
 go 1.13
 
 require (
-	code.cloudfoundry.org/cf-operator v0.4.2-0.20190925122657-30f4e063e8ba
-	code.cloudfoundry.org/quarks-job v0.0.0-20190925141312-a044bc7057cf
-	github.com/onsi/ginkgo v1.10.1
+	code.cloudfoundry.org/cf-operator v0.4.3-0.20191008134521-47a56bb5c67a
+	code.cloudfoundry.org/quarks-job v0.0.0-20191008133013-3b16916ce0a1
+	github.com/onsi/ginkgo v1.10.2
 	github.com/onsi/gomega v1.6.0
 	github.com/pkg/errors v0.8.1
 	go.uber.org/zap v1.10.0
@@ -13,5 +13,4 @@ require (
 	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	sigs.k8s.io/controller-runtime v0.2.2
-	sigs.k8s.io/yaml v1.1.0
 )
