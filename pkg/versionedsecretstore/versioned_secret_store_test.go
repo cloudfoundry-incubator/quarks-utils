@@ -16,9 +16,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"code.cloudfoundry.org/quarks-job/testing"
 	cfakes "code.cloudfoundry.org/quarks-utils/pkg/fakes"
 	. "code.cloudfoundry.org/quarks-utils/pkg/versionedsecretstore"
+	"code.cloudfoundry.org/quarks-utils/testing"
 )
 
 var _ = Describe("VersionedSecretStore", func() {
