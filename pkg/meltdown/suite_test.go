@@ -1,4 +1,4 @@
-package reference_test
+package meltdown_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestReference(t *testing.T) {
+func TestExtendedStatefulSet(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Reference Suite")
+	RunSpecs(t, "Meltdown Suite")
 }
