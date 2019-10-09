@@ -51,7 +51,7 @@ func (m *Machine) podLogs(namespace, podName string, opts corev1.PodLogOptions) 
 
 // WaitForPodLogMsg searches pod test logs for at least one occurrence of msg.
 func (m *Machine) WaitForPodLogMsg(namespace string, podName string, msg string) error {
-	return wait.PollImmediate(pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(pollInterval, m.PollTimeout, func() (bool, error) {
 		logs, err := m.GetPodLogs(namespace, podName)
 		return strings.Contains(logs, msg), err
 	})
@@ -59,7 +59,7 @@ func (m *Machine) WaitForPodLogMsg(namespace string, podName string, msg string)
 
 // WaitForPodContainerLogMsg searches pod test logs for at least one occurrence of msg.
 func (m *Machine) WaitForPodContainerLogMsg(namespace, podName, containerName, msg string) error {
-	return wait.PollImmediate(100*time.Millisecond, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(100*time.Millisecond, m.PollTimeout, func() (bool, error) {
 		logs, err := m.GetPodContainerLogs(namespace, podName, containerName)
 		return strings.Contains(logs, msg), err
 	})
@@ -78,7 +78,7 @@ func (m *Machine) PodContainsLogMsg(namespace, podName, containerName, msg strin
 func (m *Machine) WaitForPodLogMatchRegexp(namespace string, podName string, regExp string) error {
 	r, _ := regexp.Compile(regExp)
 
-	return wait.PollImmediate(pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(pollInterval, m.PollTimeout, func() (bool, error) {
 		logs, err := m.GetPodLogs(namespace, podName)
 		return r.MatchString(logs), err
 	})
@@ -88,7 +88,7 @@ func (m *Machine) WaitForPodLogMatchRegexp(namespace string, podName string, reg
 func (m *Machine) WaitForPodContainerLogMatchRegexp(namespace string, podName string, containerName string, regExp string) error {
 	r, _ := regexp.Compile(regExp)
 
-	return wait.PollImmediate(pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(pollInterval, m.PollTimeout, func() (bool, error) {
 		logs, err := m.GetPodContainerLogs(namespace, podName, containerName)
 		return r.MatchString(logs), err
 	})
@@ -98,7 +98,7 @@ func (m *Machine) WaitForPodContainerLogMatchRegexp(namespace string, podName st
 // When using this, tests should use FlushLog() to remove log messages from
 // other tests.
 func (m *Machine) WaitForLogMsg(logs *observer.ObservedLogs, msg string) error {
-	return wait.PollImmediate(pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(pollInterval, m.PollTimeout, func() (bool, error) {
 		n := logs.FilterMessageSnippet(msg).Len()
 		return n > 0, nil
 	})

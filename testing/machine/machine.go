@@ -20,8 +20,8 @@ import (
 
 // Machine produces and destroys resources for tests
 type Machine struct {
-	pollTimeout  time.Duration
-	pollInterval time.Duration
+	PollTimeout  time.Duration
+	PollInterval time.Duration
 
 	Clientset *kubernetes.Clientset
 }
@@ -33,6 +33,21 @@ type TearDownFunc func() error
 // sent through a channel
 type ChanResult struct {
 	Error error
+}
+
+const (
+	// DefaultTimeout used to wait for resources
+	DefaultTimeout = 300 * time.Second
+	// DefaultInterval for polling
+	DefaultInterval = 500 * time.Millisecond
+)
+
+// NewMachine returns a new machine which creates k8s resources
+func NewMachine() Machine {
+	return Machine{
+		PollTimeout:  DefaultTimeout,
+		PollInterval: DefaultInterval,
+	}
 }
 
 // CreateNamespace creates a namespace, it doesn't return an error if the namespace exists
@@ -76,28 +91,28 @@ func (m *Machine) CreatePod(namespace string, pod corev1.Pod) (TearDownFunc, err
 
 // WaitForPod blocks until the pod is running. It fails after the timeout.
 func (m *Machine) WaitForPod(namespace string, name string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		return m.PodRunning(namespace, name)
 	})
 }
 
 // WaitForPodReady blocks until the pod is ready. It fails after the timeout.
 func (m *Machine) WaitForPodReady(namespace string, name string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		return m.PodReady(namespace, name)
 	})
 }
 
 // WaitForPods blocks until all selected pods are running. It fails after the timeout.
 func (m *Machine) WaitForPods(namespace string, labels string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		return m.PodsRunning(namespace, labels)
 	})
 }
 
 // WaitForPodFailures blocks until all selected pods are failing. It fails after the timeout.
 func (m *Machine) WaitForPodFailures(namespace string, labels string) error {
-	return wait.PollImmediate(5*time.Second, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(5*time.Second, m.PollTimeout, func() (bool, error) {
 		return m.PodsFailing(namespace, labels)
 	})
 }
@@ -105,14 +120,14 @@ func (m *Machine) WaitForPodFailures(namespace string, labels string) error {
 // WaitForInitContainerRunning blocks until a pod's init container is running.
 // It fails after the timeout.
 func (m *Machine) WaitForInitContainerRunning(namespace, podName, containerName string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		return m.InitContainerRunning(namespace, podName, containerName)
 	})
 }
 
 // WaitForPodsDelete blocks until the pod is deleted. It fails after the timeout.
 func (m *Machine) WaitForPodsDelete(namespace string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		return m.PodsDeleted(namespace)
 	})
 }
@@ -362,14 +377,14 @@ func (m *Machine) GetSecret(namespace string, name string) (*corev1.Secret, erro
 
 // WaitForSecret blocks until the secret is available. It fails after the timeout.
 func (m *Machine) WaitForSecret(namespace string, name string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		return m.SecretExists(namespace, name)
 	})
 }
 
 // WaitForSecretDeletion blocks until the CR is deleted
 func (m *Machine) WaitForSecretDeletion(namespace string, name string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		found, err := m.SecretExists(namespace, name)
 		return !found, err
 	})
@@ -432,7 +447,7 @@ func (m *Machine) DeleteJobs(namespace string, labels string) (bool, error) {
 
 // WaitForJobsDeleted waits until the jobs no longer exists
 func (m *Machine) WaitForJobsDeleted(namespace string, labels string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{
 			LabelSelector: labels,
 		})
@@ -461,7 +476,7 @@ func (m *Machine) JobExists(namespace string, name string) (bool, error) {
 // It fails after the timeout.
 func (m *Machine) CollectJobs(namespace string, labels string, n int) ([]batchv1.Job, error) {
 	found := map[string]batchv1.Job{}
-	err := wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	err := wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{
 			LabelSelector: labels,
 		})
@@ -588,7 +603,7 @@ func (m *Machine) CreateService(namespace string, service corev1.Service) (TearD
 
 // WaitForPortReachable blocks until the endpoint is reachable
 func (m *Machine) WaitForPortReachable(protocol, uri string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		_, err := net.Dial(protocol, uri)
 		return err == nil, nil
 	})
@@ -606,7 +621,7 @@ func (m *Machine) GetEndpoints(namespace string, name string) (*corev1.Endpoints
 
 // WaitForSubsetsExist blocks until the specified endpoints' subsets exist
 func (m *Machine) WaitForSubsetsExist(namespace string, endpointsName string) error {
-	return wait.PollImmediate(m.pollInterval, m.pollTimeout, func() (bool, error) {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		found, err := m.SubsetsExist(namespace, endpointsName)
 		return found, err
 	})
