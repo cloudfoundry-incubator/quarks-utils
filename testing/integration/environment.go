@@ -11,6 +11,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" //from https://github.com/kubernetes/client-go/issues/345
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"code.cloudfoundry.org/quarks-utils/pkg/config"
 )
 
 // Environment starts our operator and handles interaction with the k8s
@@ -20,6 +22,7 @@ type Environment struct {
 	Teardown     func(wasFailure bool)
 	KubeConfig   *rest.Config
 	Log          *zap.SugaredLogger
+	Config       *config.Config
 	ObservedLogs *observer.ObservedLogs
 	Namespace    string
 	Stop         chan struct{}
