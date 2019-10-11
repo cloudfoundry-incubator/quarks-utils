@@ -4,6 +4,7 @@ go:
   - '1.13'
 
 install:
+  - export GOPROXY=https://proxy.golang.org
   - go install github.com/onsi/ginkgo/ginkgo
   - export PATH=$PATH:$GOPATH/bin
 
