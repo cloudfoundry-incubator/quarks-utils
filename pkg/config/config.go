@@ -31,7 +31,16 @@ type Config struct {
 	MaxExtendedStatefulSetWorkers int
 }
 
-// NewConfig returns a new Config for a Manager of Controllers
+// NewDefaultConfig returns a new Config for a manager of controllers
+func NewDefaultConfig(fs afero.Fs) *Config {
+	return &Config{
+		MeltdownDuration:     MeltdownDuration,
+		MeltdownRequeueAfter: MeltdownRequeueAfter,
+		Fs:                   fs,
+	}
+}
+
+// NewConfig returns a new Config for a manager of controllers
 func NewConfig(namespace string, operatorNamespace string, ctxTimeOut int, useServiceRef bool, host string, port int32, fs afero.Fs, maxBoshDeploymentWorkers, maxExtendedJobWorkers, maxExtendedSecretWorkers, maxExtendedStatefulSetWorkers int) *Config {
 	return &Config{
 		CtxTimeOut:                    time.Duration(ctxTimeOut) * time.Second,
@@ -47,18 +56,5 @@ func NewConfig(namespace string, operatorNamespace string, ctxTimeOut int, useSe
 		MaxExtendedJobWorkers:         maxExtendedJobWorkers,
 		MaxExtendedSecretWorkers:      maxExtendedSecretWorkers,
 		MaxExtendedStatefulSetWorkers: maxExtendedStatefulSetWorkers,
-	}
-}
-
-// NewJobConfig returns a new Config for a Manager of Controllers
-func NewJobConfig(namespace string, operatorNamespace string, ctxTimeOut int, fs afero.Fs, maxExtendedJobWorkers int) *Config {
-	return &Config{
-		CtxTimeOut:            time.Duration(ctxTimeOut) * time.Second,
-		MeltdownDuration:      MeltdownDuration,
-		MeltdownRequeueAfter:  MeltdownRequeueAfter,
-		Namespace:             namespace,
-		OperatorNamespace:     operatorNamespace,
-		Fs:                    fs,
-		MaxExtendedJobWorkers: maxExtendedJobWorkers,
 	}
 }
