@@ -3,8 +3,9 @@ package config
 import (
 	"fmt"
 
-	"code.cloudfoundry.org/quarks-utils/pkg/names"
 	corev1 "k8s.io/api/core/v1"
+
+	"code.cloudfoundry.org/quarks-utils/pkg/names"
 )
 
 var config struct {
