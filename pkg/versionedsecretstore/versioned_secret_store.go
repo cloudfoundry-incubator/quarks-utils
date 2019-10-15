@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"code.cloudfoundry.org/quarks-utils/pkg/ctxlog"
@@ -78,6 +79,13 @@ type VersionedSecretImpl struct {
 func NewVersionedSecretStore(client client.Client) VersionedSecretImpl {
 	return VersionedSecretImpl{
 		backend: &versionedSecretStoreClientBackend{client: client},
+	}
+}
+
+// NewClientsetVersionedSecretStore returns a VersionedSecretStore using a kubernetes.Clientset backend
+func NewClientsetVersionedSecretStore(clientset kubernetes.Interface) VersionedSecretImpl {
+	return VersionedSecretImpl{
+		backend: &versionedSecretStoreClientsetBackend{clientset: clientset},
 	}
 }
 
