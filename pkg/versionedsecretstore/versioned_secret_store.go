@@ -2,6 +2,7 @@ package versionedsecretstore
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 
@@ -37,6 +38,24 @@ const (
 )
 
 var _ VersionedSecretStore = &VersionedSecretImpl{}
+
+// SecretIdenticalError indicates cases where the latest secret version is identical to the one to be created
+type SecretIdenticalError struct {
+	secret *corev1.Secret
+}
+
+func (e SecretIdenticalError) Error() string {
+	return fmt.Sprintf("The latest version of the versioned secret '%s/%s' is identical to the one to be created.", e.secret.Namespace, e.secret.Name)
+}
+
+// IsSecretIdenticalError returns whether the error object is a IsSecretIdenticalError
+func IsSecretIdenticalError(e error) bool {
+	switch e.(type) {
+	case SecretIdenticalError:
+		return true
+	}
+	return false
+}
 
 type versionedSecretStoreBackend interface {
 	Create(ctx context.Context, secret *corev1.Secret) error
@@ -145,6 +164,30 @@ func (p VersionedSecretImpl) SetSecretReferences(ctx context.Context, namespace 
 
 // Create creates a new version of the secret from secret data
 func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, ownerName string, ownerID types.UID, secretName string, secretData map[string]string, labels map[string]string, sourceDescription string) error {
+	latest, err := p.Latest(ctx, namespace, secretName)
+	if err == nil {
+		labelsIdentical := true
+		for k, v := range latest.Labels {
+			if k == LabelVersion || k == LabelSecretKind {
+				continue
+			}
+			if labels[k] != v {
+				labelsIdentical = false
+				break
+			}
+		}
+
+		encodedData := make(map[string][]byte)
+		for k, v := range secretData {
+			encodedData[k] = []byte(v)
+		}
+
+		if reflect.DeepEqual(encodedData, latest.Data) && labelsIdentical {
+			// Do not create new versions if the content and the labels (except the version label) are identical
+			return SecretIdenticalError{secret: latest}
+		}
+	}
+
 	currentVersion, err := p.getGreatestVersion(ctx, namespace, secretName)
 	if err != nil {
 		return err
