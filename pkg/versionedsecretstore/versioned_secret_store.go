@@ -37,6 +37,14 @@ const (
 
 var _ VersionedSecretStore = &VersionedSecretImpl{}
 
+type versionedSecretStoreBackend interface {
+	Create(ctx context.Context, secret *corev1.Secret) error
+	Get(ctx context.Context, nn types.NamespacedName) (*corev1.Secret, error)
+	Update(ctx context.Context, secret *corev1.Secret) error
+	Delete(ctx context.Context, secret *corev1.Secret) error
+	List(ctx context.Context, namespace string, matchLabels map[string]string) (*corev1.SecretList, error)
+}
+
 // VersionedSecretStore is the interface to version secrets in Kubernetes
 //
 // Each update to the secret results in a new persisted version.
@@ -62,14 +70,14 @@ type VersionedSecretStore interface {
 
 // VersionedSecretImpl contains the required fields to persist a secret
 type VersionedSecretImpl struct {
-	client client.Client
+	backend versionedSecretStoreBackend
 }
 
 // NewVersionedSecretStore returns a VersionedSecretStore implementation to be used
 // when working with desired secret secrets
 func NewVersionedSecretStore(client client.Client) VersionedSecretImpl {
 	return VersionedSecretImpl{
-		client,
+		backend: &versionedSecretStoreClientBackend{client: client},
 	}
 }
 
@@ -165,7 +173,7 @@ func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, owner
 		StringData: secretData,
 	}
 
-	return p.client.Create(ctx, secret)
+	return p.backend.Create(ctx, secret)
 }
 
 // Get returns a specific version of the secret
@@ -175,8 +183,7 @@ func (p VersionedSecretImpl) Get(ctx context.Context, namespace string, deployme
 		return nil, err
 	}
 
-	secret := &corev1.Secret{}
-	err = p.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, secret)
+	secret, err := p.backend.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -225,8 +232,8 @@ func (p VersionedSecretImpl) Decorate(ctx context.Context, namespace string, sec
 		return err
 	}
 
-	secret := &corev1.Secret{}
-	if err := p.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: generatedSecretName}, secret); err != nil {
+	secret, err := p.backend.Get(ctx, client.ObjectKey{Namespace: namespace, Name: generatedSecretName})
+	if err != nil {
 		return err
 	}
 
@@ -238,7 +245,7 @@ func (p VersionedSecretImpl) Decorate(ctx context.Context, namespace string, sec
 	labels[key] = value
 	secret.SetLabels(labels)
 
-	return p.client.Update(ctx, secret)
+	return p.backend.Update(ctx, secret)
 }
 
 // Delete removes all versions of the secret and therefore the
@@ -250,7 +257,7 @@ func (p VersionedSecretImpl) Delete(ctx context.Context, namespace string, secre
 	}
 
 	for _, secret := range list {
-		if err := p.client.Delete(ctx, &secret); err != nil {
+		if err := p.backend.Delete(ctx, &secret); err != nil {
 			return err
 		}
 	}
@@ -263,14 +270,8 @@ func (p VersionedSecretImpl) listSecrets(ctx context.Context, namespace string, 
 		LabelSecretKind: VersionSecretKind,
 	}
 
-	secrets := &corev1.SecretList{}
-
-	if err := p.client.List(
-		ctx,
-		secrets,
-		client.InNamespace(namespace),
-		client.MatchingLabels(secretLabelsSet),
-	); err != nil {
+	secrets, err := p.backend.List(ctx, namespace, secretLabelsSet)
+	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to list secrets with labels %s", secretLabelsSet.String())
 	}
 
