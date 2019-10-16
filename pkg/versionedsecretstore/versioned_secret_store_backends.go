@@ -12,7 +12,7 @@ import (
 )
 
 type versionedSecretStoreClientsetBackend struct {
-	clientset *kubernetes.Clientset
+	clientset kubernetes.Interface
 }
 
 func (b *versionedSecretStoreClientsetBackend) Create(ctx context.Context, secret *corev1.Secret) error {
