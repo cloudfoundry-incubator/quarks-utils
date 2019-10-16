@@ -102,7 +102,7 @@ func NewVersionedSecretStore(client client.Client) VersionedSecretImpl {
 }
 
 // NewClientsetVersionedSecretStore returns a VersionedSecretStore using a kubernetes.Clientset backend
-func NewClientsetVersionedSecretStore(clientset *kubernetes.Clientset) VersionedSecretImpl {
+func NewClientsetVersionedSecretStore(clientset kubernetes.Interface) VersionedSecretImpl {
 	return VersionedSecretImpl{
 		backend: &versionedSecretStoreClientsetBackend{clientset: clientset},
 	}
