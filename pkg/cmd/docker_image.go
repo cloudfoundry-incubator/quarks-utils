@@ -5,6 +5,8 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"code.cloudfoundry.org/quarks-utils/pkg/config"
 )
 
@@ -24,6 +26,11 @@ func DockerImage() error {
 		return errors.Wrap(err, "Couldn't parse docker image reference.")
 	}
 
+	err = config.SetupOperatorImagePullPolicy(viper.GetString("docker-image-pull-policy"))
+	if err != nil {
+		return errors.Wrap(err, "Couldn't parse docker image pull policy.")
+	}
+
 	return nil
 }
 
@@ -32,12 +39,15 @@ func DockerImageFlags(pf *flag.FlagSet, argToEnv map[string]string) {
 	pf.StringP("docker-image-org", "o", "cfcontainerization", "Dockerhub organization that provides the operator docker image")
 	pf.StringP("docker-image-repository", "r", "cf-operator", "Dockerhub repository that provides the operator docker image")
 	pf.StringP("docker-image-tag", "t", "", "Tag of the operator docker image")
+	pf.StringP("docker-image-pull-policy", "", string(corev1.PullIfNotPresent), "Image pull policy")
 
 	viper.BindPFlag("docker-image-org", pf.Lookup("docker-image-org"))
 	viper.BindPFlag("docker-image-repository", pf.Lookup("docker-image-repository"))
 	viper.BindPFlag("docker-image-tag", pf.Lookup("docker-image-tag"))
+	viper.BindPFlag("docker-image-pull-policy", pf.Lookup("docker-image-pull-policy"))
 
 	argToEnv["docker-image-org"] = "DOCKER_IMAGE_ORG"
 	argToEnv["docker-image-repository"] = "DOCKER_IMAGE_REPOSITORY"
 	argToEnv["docker-image-tag"] = "DOCKER_IMAGE_TAG"
+	argToEnv["docker-image-pull-policy"] = "DOCKER_IMAGE_PULL_POLICY"
 }
