@@ -322,8 +322,6 @@ func (p VersionedSecretImpl) listSecrets(ctx context.Context, namespace string, 
 		LabelSecretKind: VersionSecretKind,
 	}
 
-	secrets := &corev1.SecretList{}
-
 	secrets, err := p.backend.List(ctx, namespace, secretLabelsSet)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to list secrets with labels %s", secretLabelsSet.String())
