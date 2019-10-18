@@ -50,16 +50,27 @@ func VersionFromName(name string) (int, error) {
 	return -1, errors.Errorf("invalid secret name %s, it does not match the naming schema", name)
 }
 
-// ContainsSecretName checks a list of secret names for our secret's name
-// while ignoring the versions
-func ContainsSecretName(names []string, name string) bool {
+// ContainsOutdatedSecretName checks a list of secret names for our secret's name
+// Only returns true if the name is included with an older version than ours
+func ContainsOutdatedSecretName(names []string, name string) bool {
 	unversioned := NamePrefix(name)
 	if unversioned == "" {
 		return false
 	}
 	for _, k := range names {
 		if strings.Contains(k, unversioned) {
-			return true
+			listVersion, err := VersionFromName(k)
+			if err != nil {
+				continue
+			}
+			ourVersion, err := VersionFromName(name)
+			if err != nil {
+				continue
+			}
+
+			if ourVersion > listVersion {
+				return true
+			}
 		}
 	}
 	return false
