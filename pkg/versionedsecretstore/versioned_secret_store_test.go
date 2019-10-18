@@ -331,13 +331,17 @@ name: fake-deployment-v4
 					return apierrors.NewNotFound(schema.GroupResource{}, nn.Name)
 				})
 
+				data := map[string]string{}
+				for k, v := range secretV1.Data {
+					data[k] = string(v)
+				}
 				err := store.Create(
 					ctx,
 					namespace,
 					"some-owner",
 					types.UID("d3d423b7-a57f-43b0-8305-79d484154e4f"),
 					secretNamePrefix,
-					secretV1.StringData,
+					data,
 					secretV1.Labels,
 					exampleSourceDescription,
 				)
