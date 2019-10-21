@@ -57,13 +57,15 @@ func ContainsOutdatedSecretName(names []string, name string) bool {
 	if unversioned == "" {
 		return false
 	}
+
+	ourVersion, err := VersionFromName(name)
+	if err != nil {
+		return false
+	}
+
 	for _, k := range names {
 		if strings.Contains(k, unversioned) {
 			listVersion, err := VersionFromName(k)
-			if err != nil {
-				continue
-			}
-			ourVersion, err := VersionFromName(name)
 			if err != nil {
 				continue
 			}
