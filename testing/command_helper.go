@@ -104,6 +104,19 @@ func (k *Kubectl) ServiceExists(namespace string, serviceName string) (bool, err
 	return false, nil
 }
 
+// Service returns the service if serviceName exists.
+func (k *Kubectl) Service(namespace string, serviceName string) (v1.Service, error) {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", "service", serviceName, "-o", "json")
+	if err != nil {
+		return v1.Service{}, errors.Wrapf(err, "failed to get service %s", serviceName)
+	}
+	var service v1.Service
+	if err := json.Unmarshal(out, &service); err != nil {
+		return v1.Service{}, errors.Wrapf(err, "failed to get service %s", serviceName)
+	}
+	return service, nil
+}
+
 // WaitForSecret blocks until the secret is available. It fails after the timeout.
 func (k *Kubectl) WaitForSecret(namespace string, secretName string) error {
 	return wait.PollImmediate(k.pollInterval, k.PollTimeout, func() (bool, error) {
