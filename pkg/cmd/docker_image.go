@@ -35,10 +35,10 @@ func DockerImage() error {
 }
 
 // DockerImageFlags adds to viper flags
-func DockerImageFlags(pf *flag.FlagSet, argToEnv map[string]string) {
+func DockerImageFlags(pf *flag.FlagSet, argToEnv map[string]string, tag string) {
 	pf.StringP("docker-image-org", "o", "cfcontainerization", "Dockerhub organization that provides the operator docker image")
 	pf.StringP("docker-image-repository", "r", "cf-operator", "Dockerhub repository that provides the operator docker image")
-	pf.StringP("docker-image-tag", "t", "", "Tag of the operator docker image")
+	pf.StringP("docker-image-tag", "t", tag, "Tag of the operator docker image")
 	pf.StringP("docker-image-pull-policy", "", string(corev1.PullIfNotPresent), "Image pull policy")
 
 	viper.BindPFlag("docker-image-org", pf.Lookup("docker-image-org"))
