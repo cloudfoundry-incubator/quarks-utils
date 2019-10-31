@@ -23,6 +23,12 @@ func IsVersionedSecret(secret corev1.Secret) bool {
 	return false
 }
 
+var nameRegex = regexp.MustCompile(`^\S+-v(\d+)$`)
+
+func IsVersionedSecretName(name string) bool {
+	return len(nameRegex.FindStringSubmatch(name)) > 0
+}
+
 // NamePrefix returns the name prefix of a versioned secret name, by removing the
 // version suffix /-v\d+/
 func NamePrefix(name string) string {
@@ -30,10 +36,11 @@ func NamePrefix(name string) string {
 	if n < 1 {
 		return ""
 	}
+	if !IsVersionedSecretName(name) {
+		return ""
+	}
 	return name[:n]
 }
-
-var nameRegex = regexp.MustCompile(`^\S+-v(\d+)$`)
 
 // VersionFromName gets version from versioned secret name
 // return -1 if not find valid version

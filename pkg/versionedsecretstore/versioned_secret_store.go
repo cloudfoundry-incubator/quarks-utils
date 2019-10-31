@@ -112,7 +112,6 @@ func NewClientsetVersionedSecretStore(clientset kubernetes.Interface) VersionedS
 func (p VersionedSecretImpl) SetSecretReferences(ctx context.Context, namespace string, podSpec *corev1.PodSpec) error {
 	_, secretsInSpec := GetConfigNamesFromSpec(*podSpec)
 	for secretNameInSpec := range secretsInSpec {
-
 		versionedSecretPrefix := NamePrefix(secretNameInSpec)
 		// If this secret doesn't look like a versioned secret (e.g. <name>-v2), move on
 		if versionedSecretPrefix == "" {
