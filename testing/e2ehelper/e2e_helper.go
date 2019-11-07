@@ -106,10 +106,10 @@ func ClusterCrdsExist() (bool, error) {
 		return false, errors.Wrapf(err, "%s", "Kubectl get crds command failed.")
 	}
 
-	crds := []string{"boshdeployments.fissile.cloudfoundry.org",
-		"extendedjobs.fissile.cloudfoundry.org",
-		"extendedsecrets.fissile.cloudfoundry.org",
-		"extendedstatefulsets.fissile.cloudfoundry.org"}
+	crds := []string{"boshdeployments.quarks.cloudfoundry.org",
+		"extendedjobs.quarks.cloudfoundry.org",
+		"extendedsecrets.quarks.cloudfoundry.org",
+		"extendedstatefulsets.quarks.cloudfoundry.org"}
 
 	if len(customResource.Items) > 0 {
 		for _, crdName := range crds {
