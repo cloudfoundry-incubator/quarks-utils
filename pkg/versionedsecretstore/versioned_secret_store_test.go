@@ -110,7 +110,7 @@ name: fake-deployment-v4
 	})
 
 	Describe("SetSecretReferences", func() {
-		Context("when there is an extendedStatefulSet", func() {
+		Context("when there is an quarksStatefulSet", func() {
 			var (
 				podSpec *corev1.PodSpec
 			)

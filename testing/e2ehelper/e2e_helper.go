@@ -99,30 +99,6 @@ func SetUpEnvironment(chartPath string) (string, TearDownFunc, error) {
 	return namespace, teardownFunc, nil
 }
 
-// ClusterCrdsExist verify if cf-operator CRDs are already in place
-func ClusterCrdsExist() (bool, error) {
-	customResource, err := testing.GetCRDs()
-	if err != nil {
-		return false, errors.Wrapf(err, "%s", "Kubectl get crds command failed.")
-	}
-
-	crds := []string{"boshdeployments.fissile.cloudfoundry.org",
-		"extendedjobs.fissile.cloudfoundry.org",
-		"extendedsecrets.fissile.cloudfoundry.org",
-		"extendedstatefulsets.fissile.cloudfoundry.org"}
-
-	if len(customResource.Items) > 0 {
-		for _, crdName := range crds {
-			if !customResource.ContainsElement(crdName) {
-				return false, fmt.Errorf("missing CRDs in cluster: %s not found", crdName)
-			}
-		}
-
-		return true, nil
-	}
-	return false, errors.New("Missing CRDs in cluster")
-}
-
 // CreateTestNamespace generates a namespace based on a env variable
 func CreateTestNamespace() (string, error) {
 	prefix, found := os.LookupEnv("TEST_NAMESPACE")
