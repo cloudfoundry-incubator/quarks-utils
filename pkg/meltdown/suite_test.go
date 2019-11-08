@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestExtendedStatefulSet(t *testing.T) {
+func TestMeltdown(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Meltdown Suite")
 }
