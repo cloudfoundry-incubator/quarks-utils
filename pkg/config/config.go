@@ -16,19 +16,19 @@ const (
 
 // Config controls the behaviour of different controllers
 type Config struct {
-	CtxTimeOut                    time.Duration
-	MeltdownDuration              time.Duration
-	MeltdownRequeueAfter          time.Duration
-	Namespace                     string
-	OperatorNamespace             string
-	WebhookUseServiceRef          bool
-	WebhookServerHost             string
-	WebhookServerPort             int32
-	Fs                            afero.Fs
-	MaxBoshDeploymentWorkers      int
-	MaxExtendedJobWorkers         int
-	MaxExtendedSecretWorkers      int
-	MaxExtendedStatefulSetWorkers int
+	CtxTimeOut                  time.Duration
+	MeltdownDuration            time.Duration
+	MeltdownRequeueAfter        time.Duration
+	Namespace                   string
+	OperatorNamespace           string
+	WebhookUseServiceRef        bool
+	WebhookServerHost           string
+	WebhookServerPort           int32
+	Fs                          afero.Fs
+	MaxBoshDeploymentWorkers    int
+	MaxQuarksJobWorkers         int
+	MaxQuarksSecretWorkers      int
+	MaxQuarksStatefulSetWorkers int
 }
 
 // NewDefaultConfig returns a new Config for a manager of controllers
@@ -41,20 +41,20 @@ func NewDefaultConfig(fs afero.Fs) *Config {
 }
 
 // NewConfig returns a new Config for a manager of controllers
-func NewConfig(namespace string, operatorNamespace string, ctxTimeOut int, useServiceRef bool, host string, port int32, fs afero.Fs, maxBoshDeploymentWorkers, maxExtendedJobWorkers, maxExtendedSecretWorkers, maxExtendedStatefulSetWorkers int) *Config {
+func NewConfig(namespace string, operatorNamespace string, ctxTimeOut int, useServiceRef bool, host string, port int32, fs afero.Fs, maxBoshDeploymentWorkers, maxQuarksJobWorkers, maxQuarksSecretWorkers, maxQuarksStatefulSetWorkers int) *Config {
 	return &Config{
-		CtxTimeOut:                    time.Duration(ctxTimeOut) * time.Second,
-		MeltdownDuration:              MeltdownDuration,
-		MeltdownRequeueAfter:          MeltdownRequeueAfter,
-		Namespace:                     namespace,
-		OperatorNamespace:             operatorNamespace,
-		WebhookUseServiceRef:          useServiceRef,
-		WebhookServerHost:             host,
-		WebhookServerPort:             port,
-		Fs:                            fs,
-		MaxBoshDeploymentWorkers:      maxBoshDeploymentWorkers,
-		MaxExtendedJobWorkers:         maxExtendedJobWorkers,
-		MaxExtendedSecretWorkers:      maxExtendedSecretWorkers,
-		MaxExtendedStatefulSetWorkers: maxExtendedStatefulSetWorkers,
+		CtxTimeOut:                  time.Duration(ctxTimeOut) * time.Second,
+		MeltdownDuration:            MeltdownDuration,
+		MeltdownRequeueAfter:        MeltdownRequeueAfter,
+		Namespace:                   namespace,
+		OperatorNamespace:           operatorNamespace,
+		WebhookUseServiceRef:        useServiceRef,
+		WebhookServerHost:           host,
+		WebhookServerPort:           port,
+		Fs:                          fs,
+		MaxBoshDeploymentWorkers:    maxBoshDeploymentWorkers,
+		MaxQuarksJobWorkers:         maxQuarksJobWorkers,
+		MaxQuarksSecretWorkers:      maxQuarksSecretWorkers,
+		MaxQuarksStatefulSetWorkers: maxQuarksStatefulSetWorkers,
 	}
 }
