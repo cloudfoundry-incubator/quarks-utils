@@ -282,7 +282,7 @@ func (m *Machine) PodCount(namespace string, labels string, match func(corev1.Po
 }
 
 // GetPods returns all the pods selected by labels
-func (m *Machine) GetPods(namespace string, labels string) (*corev1.PodList, error) {
+func (m *Machine) GetPods(namespace string, labels string, match func(corev1.Pod) bool) (*corev1.PodList, error) {
 	pods, err := m.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
 		LabelSelector: labels,
 	})
@@ -290,8 +290,13 @@ func (m *Machine) GetPods(namespace string, labels string) (*corev1.PodList, err
 		return &corev1.PodList{}, errors.Wrapf(err, "failed to query for pod by labels: %v", labels)
 	}
 
-	return pods, nil
+	for _, pod := range pods.Items {
+		if !match(pod) {
+			return &corev1.PodList{}, nil
+		}
+	}
 
+	return pods, nil
 }
 
 // GetPod returns pod by name
