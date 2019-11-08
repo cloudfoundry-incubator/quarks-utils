@@ -152,7 +152,7 @@ func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, owner
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         LabelAPIVersion,
-					Kind:               "ExtendedJob",
+					Kind:               "QuarksJob",
 					Name:               ownerName,
 					UID:                ownerID,
 					BlockOwnerDeletion: pointers.Bool(false),

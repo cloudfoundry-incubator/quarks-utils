@@ -29,7 +29,7 @@ const (
 	DeploymentSecretTypeManifestWithOps DeploymentSecretType = iota
 	// DeploymentSecretTypeManifestAndVars is a manifest whose variables have been interpolated
 	DeploymentSecretTypeManifestAndVars
-	// DeploymentSecretTypeVariable is a BOSH variable generated using an ExtendedSecret
+	// DeploymentSecretTypeVariable is a BOSH variable generated using an QuarksSecret
 	DeploymentSecretTypeVariable
 	// DeploymentSecretTypeInstanceGroupResolvedProperties is a YAML file containing all properties needed to render an Instance Group
 	DeploymentSecretTypeInstanceGroupResolvedProperties
@@ -83,7 +83,7 @@ func CalculateSecretName(secretType DeploymentSecretType, deploymentName, name s
 // CalculateIGSecretName returns the name of a k8s secret:
 // `<deployment-name>.<secretType>.<instance-group>-v<version>` secret.
 //
-// These secrets are created by ExtendedJob and mounted on containers, e.g.
+// These secrets are created by QuarksJob and mounted on containers, e.g.
 // for the template rendering.
 func CalculateIGSecretName(secretType DeploymentSecretType, deploymentName string, igName string, version string) string {
 	prefix := CalculateIGSecretPrefix(secretType, deploymentName)
@@ -162,9 +162,9 @@ func OrdinalFromPodName(name string) int {
 	return podOrdinal
 }
 
-// CSRName returns a CertificateSigningRequest name for a given ExtendedSecret
-func CSRName(namespace, extendedSecretName string) string {
-	return fmt.Sprintf("%s-%s", truncate(namespace, 19), Sanitize(truncate(extendedSecretName, 19)))
+// CSRName returns a CertificateSigningRequest name for a given QuarksJob
+func CSRName(namespace, quarksSecretName string) string {
+	return fmt.Sprintf("%s-%s", truncate(namespace, 19), Sanitize(truncate(quarksSecretName, 19)))
 }
 
 // CsrPrivateKeySecretName returns a Secret name for a given CertificateSigningRequest private key
