@@ -2,6 +2,7 @@ package versionedsecretstore
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 
@@ -12,6 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"code.cloudfoundry.org/quarks-utils/pkg/ctxlog"
@@ -36,6 +38,32 @@ const (
 )
 
 var _ VersionedSecretStore = &VersionedSecretImpl{}
+
+// SecretIdenticalError indicates cases where the latest secret version is identical to the one to be created
+type SecretIdenticalError struct {
+	secret *corev1.Secret
+}
+
+func (e SecretIdenticalError) Error() string {
+	return fmt.Sprintf("The latest version of the versioned secret '%s/%s' is identical to the one to be created.", e.secret.Namespace, e.secret.Name)
+}
+
+// IsSecretIdenticalError returns whether the error object is a IsSecretIdenticalError
+func IsSecretIdenticalError(e error) bool {
+	switch e.(type) {
+	case SecretIdenticalError:
+		return true
+	}
+	return false
+}
+
+type versionedSecretStoreBackend interface {
+	Create(ctx context.Context, secret *corev1.Secret) error
+	Get(ctx context.Context, nn types.NamespacedName) (*corev1.Secret, error)
+	Update(ctx context.Context, secret *corev1.Secret) error
+	Delete(ctx context.Context, secret *corev1.Secret) error
+	List(ctx context.Context, namespace string, matchLabels map[string]string) (*corev1.SecretList, error)
+}
 
 // VersionedSecretStore is the interface to version secrets in Kubernetes
 //
@@ -62,14 +90,21 @@ type VersionedSecretStore interface {
 
 // VersionedSecretImpl contains the required fields to persist a secret
 type VersionedSecretImpl struct {
-	client client.Client
+	backend versionedSecretStoreBackend
 }
 
 // NewVersionedSecretStore returns a VersionedSecretStore implementation to be used
 // when working with desired secret secrets
 func NewVersionedSecretStore(client client.Client) VersionedSecretImpl {
 	return VersionedSecretImpl{
-		client,
+		backend: &versionedSecretStoreClientBackend{client: client},
+	}
+}
+
+// NewClientsetVersionedSecretStore returns a VersionedSecretStore using a kubernetes.Clientset backend
+func NewClientsetVersionedSecretStore(clientset kubernetes.Interface) VersionedSecretImpl {
+	return VersionedSecretImpl{
+		backend: &versionedSecretStoreClientsetBackend{clientset: clientset},
 	}
 }
 
@@ -129,6 +164,30 @@ func (p VersionedSecretImpl) SetSecretReferences(ctx context.Context, namespace 
 
 // Create creates a new version of the secret from secret data
 func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, ownerName string, ownerID types.UID, secretName string, secretData map[string]string, labels map[string]string, sourceDescription string) error {
+	latest, err := p.Latest(ctx, namespace, secretName)
+	if err == nil {
+		labelsIdentical := true
+		for k, v := range latest.Labels {
+			if k == LabelVersion || k == LabelSecretKind {
+				continue
+			}
+			if labels[k] != v {
+				labelsIdentical = false
+				break
+			}
+		}
+
+		encodedData := make(map[string][]byte)
+		for k, v := range secretData {
+			encodedData[k] = []byte(v)
+		}
+
+		if reflect.DeepEqual(encodedData, latest.Data) && labelsIdentical {
+			// Do not create new versions if the content and the labels (except the version label) are identical
+			return SecretIdenticalError{secret: latest}
+		}
+	}
+
 	currentVersion, err := p.getGreatestVersion(ctx, namespace, secretName)
 	if err != nil {
 		return err
@@ -165,7 +224,7 @@ func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, owner
 		StringData: secretData,
 	}
 
-	return p.client.Create(ctx, secret)
+	return p.backend.Create(ctx, secret)
 }
 
 // Get returns a specific version of the secret
@@ -175,8 +234,7 @@ func (p VersionedSecretImpl) Get(ctx context.Context, namespace string, deployme
 		return nil, err
 	}
 
-	secret := &corev1.Secret{}
-	err = p.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, secret)
+	secret, err := p.backend.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name})
 	if err != nil {
 		return nil, err
 	}
@@ -225,8 +283,8 @@ func (p VersionedSecretImpl) Decorate(ctx context.Context, namespace string, sec
 		return err
 	}
 
-	secret := &corev1.Secret{}
-	if err := p.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: generatedSecretName}, secret); err != nil {
+	secret, err := p.backend.Get(ctx, client.ObjectKey{Namespace: namespace, Name: generatedSecretName})
+	if err != nil {
 		return err
 	}
 
@@ -238,7 +296,7 @@ func (p VersionedSecretImpl) Decorate(ctx context.Context, namespace string, sec
 	labels[key] = value
 	secret.SetLabels(labels)
 
-	return p.client.Update(ctx, secret)
+	return p.backend.Update(ctx, secret)
 }
 
 // Delete removes all versions of the secret and therefore the
@@ -250,7 +308,7 @@ func (p VersionedSecretImpl) Delete(ctx context.Context, namespace string, secre
 	}
 
 	for _, secret := range list {
-		if err := p.client.Delete(ctx, &secret); err != nil {
+		if err := p.backend.Delete(ctx, &secret); err != nil {
 			return err
 		}
 	}
@@ -263,14 +321,8 @@ func (p VersionedSecretImpl) listSecrets(ctx context.Context, namespace string, 
 		LabelSecretKind: VersionSecretKind,
 	}
 
-	secrets := &corev1.SecretList{}
-
-	if err := p.client.List(
-		ctx,
-		secrets,
-		client.InNamespace(namespace),
-		client.MatchingLabels(secretLabelsSet),
-	); err != nil {
+	secrets, err := p.backend.List(ctx, namespace, secretLabelsSet)
+	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to list secrets with labels %s", secretLabelsSet.String())
 	}
 

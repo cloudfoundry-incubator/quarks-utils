@@ -72,6 +72,34 @@ func ContainsSecretName(names []string, name string) bool {
 	return false
 }
 
+// ContainsOutdatedSecretVersion checks if the current secret version is greater
+// than the versions in the secrets list
+func ContainsOutdatedSecretVersion(names []string, name string) bool {
+	unversioned := NamePrefix(name)
+	if unversioned == "" {
+		return false
+	}
+
+	ourVersion, err := VersionFromName(name)
+	if err != nil {
+		return false
+	}
+
+	for _, k := range names {
+		if strings.Contains(k, unversioned) {
+			listVersion, err := VersionFromName(k)
+			if err != nil {
+				continue
+			}
+
+			if ourVersion > listVersion {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // IsInitialVersion returns true if it's a v1 secret
 func IsInitialVersion(secret corev1.Secret) bool {
 	version, ok := secret.Labels[LabelVersion]

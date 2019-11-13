@@ -274,6 +274,16 @@ name: fake-deployment-v4
 		})
 
 		Context("when there already is a version of the manifest", func() {
+			BeforeEach(func() {
+				client.ListCalls(func(context context.Context, object runtime.Object, _ ...crc.ListOption) error {
+					switch list := object.(type) {
+					case *corev1.SecretList:
+						list.Items = []corev1.Secret{*secretV1}
+					}
+					return nil
+				})
+			})
+
 			It("should create a new version", func() {
 				client.GetCalls(func(_ context.Context, nn types.NamespacedName, object runtime.Object) error {
 					switch object := object.(type) {
@@ -288,7 +298,7 @@ name: fake-deployment-v4
 				client.CreateCalls(func(context context.Context, object runtime.Object, _ ...crc.CreateOption) error {
 					switch object := object.(type) {
 					case *corev1.Secret:
-						Expect(object.GetName()).To(Equal(fmt.Sprintf("%s-v%d", secretNamePrefix, 1)))
+						Expect(object.GetName()).To(Equal(fmt.Sprintf("%s-v%d", secretNamePrefix, 2)))
 						return nil
 					}
 					return nil
@@ -307,6 +317,38 @@ name: fake-deployment-v4
 					exampleSourceDescription,
 				)
 				Expect(err).ToNot(HaveOccurred())
+				Expect(client.CreateCallCount()).To(Equal(1))
+			})
+
+			It("should not create a new version if the latest version is identical", func() {
+				client.GetCalls(func(_ context.Context, nn types.NamespacedName, object runtime.Object) error {
+					switch object := object.(type) {
+					case *corev1.Secret:
+						secretV1.DeepCopyInto(object)
+						return nil
+					}
+
+					return apierrors.NewNotFound(schema.GroupResource{}, nn.Name)
+				})
+
+				data := map[string]string{}
+				for k, v := range secretV1.Data {
+					data[k] = string(v)
+				}
+
+				err := store.Create(
+					ctx,
+					namespace,
+					"some-owner",
+					types.UID("d3d423b7-a57f-43b0-8305-79d484154e4f"),
+					secretNamePrefix,
+					data,
+					secretV1.Labels,
+					exampleSourceDescription,
+				)
+				Expect(err).To(HaveOccurred())
+				Expect(IsSecretIdenticalError(err)).To(BeTrue())
+				Expect(client.CreateCallCount()).To(Equal(0))
 			})
 		})
 
