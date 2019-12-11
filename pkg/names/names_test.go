@@ -60,4 +60,50 @@ var _ = Describe("Names", func() {
 			}
 		})
 	})
+
+	Context("SecretName", func() {
+		type test struct {
+			arg1   names.DeploymentSecretType
+			arg2   string
+			arg3   string
+			arg4   string
+			name   string
+			prefix string
+		}
+		tests := []test{
+			{
+				arg1:   names.DeploymentSecretTypeInstanceGroupResolvedProperties,
+				arg2:   "deploymentName",
+				arg3:   "ig-Name",
+				arg4:   "", // "0.1",
+				name:   "deployment.ig-resolved.ig-name",
+				prefix: "deployment.ig-resolved.ig-name",
+			},
+			{
+				arg1:   names.DeploymentSecretTypeInstanceGroupResolvedProperties,
+				arg2:   "deployment-Name",
+				arg3:   "ig_Name",
+				arg4:   "",
+				name:   "deployment-.ig-resolved.ig-name",
+				prefix: "deployment-.ig-resolved.ig-name",
+			},
+			{
+				arg1:   names.DeploymentSecretTypeInstanceGroupResolvedProperties,
+				arg2:   "deploymentname123456789012345678901234567890123456789012345678901234567890",
+				arg3:   "igname1234567890123456789012345678901234567890123456789012345678901234567890",
+				arg4:   "",
+				name:   "deploymentname123456789012345679b45c361de1db4171f6a0ea0bbe035ed.igname1234567890123456789012345ac27e305a5b88c7c20380c2737917bbc",
+				prefix: "deploymentname123456789012345679b45c361de1db4171f6a0ea0bbe035ed.igname1234567890123456789012345ac27e305a5b88c7c20380c2737917bbc",
+			},
+		}
+
+		It("produces valid k8s job names", func() {
+			for _, t := range tests {
+				r := names.InstanceGroupSecretName(t.arg1, t.arg2, t.arg3, t.arg4)
+				Expect(r).To(Equal(t.name), fmt.Sprintf("%#v", t))
+				r = names.DeploymentSecretPrefix(t.arg1, t.arg2) + names.Sanitize(t.arg3)
+				Expect(r).To(Equal(t.prefix), fmt.Sprintf("%#v", t))
+			}
+		})
+	})
 })

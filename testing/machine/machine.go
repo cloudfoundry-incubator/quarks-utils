@@ -304,6 +304,19 @@ func (m *Machine) GetPod(namespace string, name string) (*corev1.Pod, error) {
 	return pod, nil
 }
 
+// UpdatePod updates a pod and returns a function to delete it
+func (m *Machine) UpdatePod(namespace string, pod corev1.Pod) (*corev1.Pod, TearDownFunc, error) {
+	client := m.Clientset.CoreV1().Pods(namespace)
+	s, err := client.Update(&pod)
+	return s, func() error {
+		err := client.Delete(pod.GetName(), &metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		return nil
+	}, err
+}
+
 // CreateConfigMap creates a ConfigMap and returns a function to delete it
 func (m *Machine) CreateConfigMap(namespace string, configMap corev1.ConfigMap) (TearDownFunc, error) {
 	client := m.Clientset.CoreV1().ConfigMaps(namespace)
@@ -356,7 +369,7 @@ func (m *Machine) UpdateSecret(namespace string, secret corev1.Secret) (*corev1.
 	}, err
 }
 
-// CollectSecret polls untile the specified secret can be fetched
+// CollectSecret polls until the specified secret can be fetched
 func (m *Machine) CollectSecret(namespace string, name string) (*corev1.Secret, error) {
 	err := m.WaitForSecret(namespace, name)
 	if err != nil {

@@ -62,11 +62,22 @@ func DesiredManifestName(deploymentName string, version string) string {
 	return finalName
 }
 
+// EntanglementSecretName returns the name of a secret containing properties of
+// the provides section from a BOSH job
+func EntanglementSecretName(deploymentName, igName string) string {
+	return Sanitize(fmt.Sprintf("link-%s-%s", deploymentName, igName))
+}
+
+// EntanglementSecretKey returns the key (composed of type and name) for the k8s secret's data
+func EntanglementSecretKey(linkType, linkName string) string {
+	return fmt.Sprintf("%s.%s", linkType, linkName)
+}
+
 var secretNameRegex = regexp.MustCompile("[^-][a-z0-9-]*.[a-z0-9-]*[^-]")
 var secretPartRegex = regexp.MustCompile("[a-z0-9-]*")
 
-// CalculateSecretName generates a Secret name for a given name and a deployment
-func CalculateSecretName(secretType DeploymentSecretType, deploymentName, name string) string {
+// DeploymentSecretName generates a Secret name for a given name and a deployment
+func DeploymentSecretName(secretType DeploymentSecretType, deploymentName, name string) string {
 	if name == "" {
 		name = secretType.String()
 	} else {
@@ -80,13 +91,19 @@ func CalculateSecretName(secretType DeploymentSecretType, deploymentName, name s
 	return truncateMD5(secretName)
 }
 
-// CalculateIGSecretName returns the name of a k8s secret:
+// DeploymentSecretPrefix returns the prefix used for our k8s secrets:
+// `<deployment-name>.<secretType>.
+func DeploymentSecretPrefix(secretType DeploymentSecretType, deploymentName string) string {
+	return DeploymentSecretName(secretType, deploymentName, "") + "."
+}
+
+// InstanceGroupSecretName returns the name of a k8s secret:
 // `<deployment-name>.<secretType>.<instance-group>-v<version>` secret.
 //
 // These secrets are created by QuarksJob and mounted on containers, e.g.
 // for the template rendering.
-func CalculateIGSecretName(secretType DeploymentSecretType, deploymentName string, igName string, version string) string {
-	prefix := CalculateIGSecretPrefix(secretType, deploymentName)
+func InstanceGroupSecretName(secretType DeploymentSecretType, deploymentName string, igName string, version string) string {
+	prefix := DeploymentSecretPrefix(secretType, deploymentName)
 	finalName := prefix + Sanitize(igName)
 
 	if version != "" {
@@ -94,12 +111,6 @@ func CalculateIGSecretName(secretType DeploymentSecretType, deploymentName strin
 	}
 
 	return finalName
-}
-
-// CalculateIGSecretPrefix returns the prefix used for our k8s secrets:
-// `<deployment-name>.<secretType>.
-func CalculateIGSecretPrefix(secretType DeploymentSecretType, deploymentName string) string {
-	return CalculateSecretName(secretType, deploymentName, "") + "."
 }
 
 var allowedKubeChars = regexp.MustCompile("[^-a-z0-9]*")
