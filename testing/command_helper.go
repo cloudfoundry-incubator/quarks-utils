@@ -52,11 +52,43 @@ func (k *Kubectl) RunCommandWithCheckString(namespace string, podName string, co
 	return errors.Errorf("'%s' not found in output '%s'", result, string(out))
 }
 
+// GetPodNames returns the names of the pods matching the selector
+func (k *Kubectl) GetPodNames(namespace string, selector string) ([]string, error) {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", "pod",
+		"-l", selector,
+		"-o", "jsonpath={.items[*].metadata.name}")
+	if err != nil {
+		return []string{}, err
+	}
+	names := strings.Split(string(out), " ")
+	return names, nil
+}
+
 // WaitForPod blocks until the pod is available. It fails after the timeout.
 func (k *Kubectl) WaitForPod(namespace string, labelName string, podName string) error {
 	return wait.PollImmediate(k.pollInterval, k.PollTimeout, func() (bool, error) {
 		return k.PodExists(namespace, labelName, podName)
 	})
+}
+
+// WaitForPodDelete blocks until the pod is available. It fails after the timeout.
+func (k *Kubectl) WaitForPodDelete(namespace string, podName string) error {
+	return wait.PollImmediate(k.pollInterval, k.PollTimeout, func() (bool, error) {
+		return k.checkPodDeleted(namespace, podName)
+	})
+}
+
+// checkPodTerminateLabelFilter checks is the pod status is terminated
+func (k *Kubectl) checkPodDeleted(namespace string, name string) (bool, error) {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", "pod", name)
+	msg := string(out)
+	if err != nil {
+		if strings.Contains(msg, "Error from server (NotFound)") {
+			return true, nil
+		}
+		return false, errors.Wrapf(err, "Kubectl get pod '%s' failed: %s", name, msg)
+	}
+	return false, nil
 }
 
 // PodExists returns true if the pod by that label is present
@@ -379,6 +411,20 @@ func RunCommandWithOutput(namespace string, podName string, commandInPod string)
 		return out.String(), nil
 	}
 	return "", err
+}
+
+// WaitForData blocks until the specified data is available. It fails after the timeout.
+func (k *Kubectl) WaitForData(namespace string, resourceName string, name string, template string, expectation string) error {
+	return wait.PollImmediate(k.pollInterval, k.PollTimeout, func() (bool, error) {
+		result, err := GetData(namespace, resourceName, name, template)
+		if err != nil {
+			return false, err
+		}
+		if strings.Contains(string(result), expectation) {
+			return true, nil
+		}
+		return false, nil
+	})
 }
 
 // GetData fetches the specified output by the given templatePath
