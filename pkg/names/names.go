@@ -27,8 +27,8 @@ const (
 const (
 	// DeploymentSecretTypeManifestWithOps is a manifest that has ops files applied
 	DeploymentSecretTypeManifestWithOps DeploymentSecretType = iota
-	// DeploymentSecretTypeManifestAndVars is a manifest whose variables have been interpolated
-	DeploymentSecretTypeManifestAndVars
+	// DeploymentSecretTypeDesiredManifest is a manifest whose variables have been interpolated
+	DeploymentSecretTypeDesiredManifest
 	// DeploymentSecretTypeVariable is a BOSH variable generated using an QuarksSecret
 	DeploymentSecretTypeVariable
 	// DeploymentSecretTypeInstanceGroupResolvedProperties is a YAML file containing all properties needed to render an Instance Group
@@ -40,7 +40,7 @@ const (
 func (s DeploymentSecretType) String() string {
 	return [...]string{
 		"with-ops",
-		"with-vars",
+		"desired",
 		"var",
 		"ig-resolved",
 		"bpm"}[s]
