@@ -29,7 +29,7 @@ type TearDownFunc func() error
 // SetUpEnvironment ensures helm binary can run,
 // being able to reach tiller, and eventually it
 // will install the cf-operator chart.
-func SetUpEnvironment(chartPath string) (string, TearDownFunc, error) {
+func SetUpEnvironment(chartPath string) (string, string, TearDownFunc, error) {
 	// Ensure tiller is there, if not
 	// then create it, via "init"
 	err := testing.RunHelmBinaryWithCustomErr("version", "-s")
@@ -39,28 +39,30 @@ func SetUpEnvironment(chartPath string) (string, TearDownFunc, error) {
 			if strings.Contains(err.StdOut, "could not find tiller") {
 				err := testing.RunHelmBinaryWithCustomErr("init", "--wait")
 				if err != nil {
-					return "", nil, errors.Wrapf(err, "%s Helm init --wait command failed.", e2eFailedMessage)
+					return "", "", nil, errors.Wrapf(err, "%s Helm init --wait command failed.", e2eFailedMessage)
 				}
 			}
 		default:
-			return "", nil, errors.Wrapf(err, "%s Helm version -s command failed", e2eFailedMessage)
+			return "", "", nil, errors.Wrapf(err, "%s Helm version -s command failed", e2eFailedMessage)
 		}
 	}
 
-	namespace, err = CreateTestNamespace()
+	operatorNamespace, err := CreateTestNamespace()
+	namespace = fmt.Sprintf("%s-work", operatorNamespace)
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "%s Creating test namespace failed.", e2eFailedMessage)
+		return "", "", nil, errors.Wrapf(err, "%s Creating test namespace failed.", e2eFailedMessage)
 	}
 	fmt.Println("Setting up in test namespace '" + namespace + "'...")
 
 	// TODO: find relative path here
 	err = testing.RunHelmBinaryWithCustomErr("install", chartPath,
-		"--name", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, namespace),
-		"--namespace", namespace,
+		"--name", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace),
+		"--namespace", operatorNamespace,
 		"--timeout", installTimeOutInSecs,
+		"--set", fmt.Sprintf("global.operator.watchNamespace=%s", namespace),
 		"--wait")
 	if err != nil {
-		return "", nil, errors.Wrapf(err, "%s Helm install command failed.", e2eFailedMessage)
+		return "", "", nil, errors.Wrapf(err, "%s Helm install command failed.", e2eFailedMessage)
 	}
 
 	// Add sleep for workaround for CI timeouts
@@ -88,6 +90,11 @@ func SetUpEnvironment(chartPath string) (string, TearDownFunc, error) {
 			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
 		}
 
+		err = testing.DeleteNamespace(operatorNamespace)
+		if err != nil {
+			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
+		}
+
 		if messages != "" {
 			fmt.Printf("Failures while cleaning up test environment for '%s':\n %v", namespace, messages)
 			return errors.New(messages)
@@ -96,7 +103,7 @@ func SetUpEnvironment(chartPath string) (string, TearDownFunc, error) {
 		return nil
 	}
 
-	return namespace, teardownFunc, nil
+	return namespace, operatorNamespace, teardownFunc, nil
 }
 
 // CreateTestNamespace generates a namespace based on a env variable
