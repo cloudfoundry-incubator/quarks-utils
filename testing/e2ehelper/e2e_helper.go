@@ -80,7 +80,7 @@ func SetUpEnvironment(chartPath string) (string, string, TearDownFunc, error) {
 			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
 		}
 
-		err := testing.RunHelmBinaryWithCustomErr("delete", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, namespace), "--purge")
+		err := testing.RunHelmBinaryWithCustomErr("delete", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace), "--purge")
 		if err != nil {
 			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
 		}
