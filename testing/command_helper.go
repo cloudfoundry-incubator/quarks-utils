@@ -430,7 +430,11 @@ func (k *Kubectl) WaitForData(namespace string, resourceName string, name string
 // GetData fetches the specified output by the given templatePath
 func GetData(namespace string, resourceName string, name string, templatePath string) ([]byte, error) {
 	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", resourceName, name, "-o", templatePath)
+	msg := string(out)
 	if err != nil {
+		if strings.Contains(msg, "Error from server (NotFound)") {
+			return []byte{}, nil
+		}
 		return []byte{}, errors.Wrapf(err, "Getting  %s failed with template Path %s.", name, templatePath)
 	}
 	if len(string(out)) > 0 {
