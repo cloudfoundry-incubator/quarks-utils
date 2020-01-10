@@ -9,9 +9,9 @@ import (
 const (
 	// MeltdownDuration is the duration of the meltdown period, in which we
 	// postpone further reconciles for the same resource
-	MeltdownDuration = 10 * time.Second
+	MeltdownDuration = 1 * time.Minute
 	// MeltdownRequeueAfter is the duration for which we delay the requeuing of the reconcile
-	MeltdownRequeueAfter = 5 * time.Second
+	MeltdownRequeueAfter = 30 * time.Second
 )
 
 // Config controls the behaviour of different controllers
