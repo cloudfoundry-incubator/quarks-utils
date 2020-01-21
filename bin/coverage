@@ -1,0 +1,10 @@
+#!/bin/bash
+set -eu
+
+# add missing newlines to work around gover bug: https://github.com/sozorogami/gover/issues/9
+find ./code-coverage -type f | while read -r f; do echo >> "$f"; done
+
+# Send code coverage report to coveralls.io
+gover ./code-coverage ./code-coverage/gover.coverprofile
+
+goveralls -coverprofile code-coverage/gover.coverprofile -service=travis-ci -repotoken "$COVERALLS_TOKEN"
