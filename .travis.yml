@@ -1,21 +1,29 @@
 language: go
 
 go:
-  - '1.13'
+- '1.13'
+
+env:
+  global:
+    - COVERAGE=true
 
 install:
-  - export GOPROXY=https://proxy.golang.org
-  - go install github.com/onsi/ginkgo/ginkgo
-  - export PATH=$PATH:$GOPATH/bin
+- export GOPROXY=https://proxy.golang.org
+- go install github.com/onsi/ginkgo/ginkgo
+- export PATH=$PATH:$GOPATH/bin
 
 jobs:
   include:
-    - stage: Unit Tests
-      script: bin/test-unit
-
-    - stage: Linting
-      before_script:
-        - curl -LO https://github.com/dominikh/go-tools/releases/download/2019.2.3/staticcheck_linux_amd64.tar.gz
-        - tar xfz staticcheck_linux_amd64.tar.gz --strip-component 1 -C $GOPATH/bin staticcheck/staticcheck
-        - go get -u golang.org/x/lint/golint
-      script: bin/lint
+  - stage: Linting
+    before_script:
+      - curl -LO https://github.com/dominikh/go-tools/releases/download/2019.2.3/staticcheck_linux_amd64.tar.gz
+      - tar xfz staticcheck_linux_amd64.tar.gz --strip-component 1 -C $GOPATH/bin staticcheck/staticcheck
+      - go get -u golang.org/x/lint/golint
+    script: bin/lint
+  - stage: Unit Tests
+    before_script:
+      - go get github.com/mattn/goveralls
+      - go get github.com/modocache/gover
+    script:
+    - bin/test-unit
+    - bin/coverage
