@@ -54,13 +54,12 @@ func SetUpEnvironment(chartPath string) (string, string, TearDownFunc, error) {
 	}
 	fmt.Println("Setting up in test namespace '" + namespace + "'...")
 
-	// TODO: find relative path here
-	err = testing.RunHelmBinaryWithCustomErr("install", chartPath,
-		"--name", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace),
-		"--namespace", operatorNamespace,
-		"--timeout", installTimeOutInSecs,
-		"--set", fmt.Sprintf("global.operator.watchNamespace=%s", namespace),
-		"--wait")
+	helmVersion, err := testing.HelmBinaryVersion()
+	if err != nil {
+		return "", "", nil, errors.Wrapf(err, "%s Helm version command failed.", e2eFailedMessage)
+	}
+
+	err = installHelmChart(helmVersion, operatorNamespace, namespace, chartPath)
 	if err != nil {
 		return "", "", nil, errors.Wrapf(err, "%s Helm install command failed.", e2eFailedMessage)
 	}
@@ -80,7 +79,11 @@ func SetUpEnvironment(chartPath string) (string, string, TearDownFunc, error) {
 			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
 		}
 
-		err := testing.RunHelmBinaryWithCustomErr("delete", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace), "--purge")
+		if helmVersion == "2" {
+			err = testing.RunHelmBinaryWithCustomErr("delete", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace), "--purge")
+		} else {
+			err = testing.RunHelmBinaryWithCustomErr("delete", "-n", operatorNamespace, fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace))
+		}
 		if err != nil {
 			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
 		}
@@ -121,4 +124,26 @@ func CreateTestNamespace() (string, error) {
 	}
 
 	return namespace, nil
+}
+
+func installHelmChart(helmVersion, operatorNamespace, namespace, chartPath string) error {
+	var err error
+	if helmVersion == "2" {
+		err = testing.RunHelmBinaryWithCustomErr("install", chartPath,
+			"--name", fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace),
+			"--namespace", operatorNamespace,
+			"--timeout", installTimeOutInSecs,
+			"--set", fmt.Sprintf("global.operator.watchNamespace=%s", namespace),
+			"--wait")
+	} else {
+		err = testing.RunHelmBinaryWithCustomErr("install",
+			fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace),
+			chartPath,
+			"--namespace", operatorNamespace,
+			"--timeout", fmt.Sprintf("%ss", installTimeOutInSecs),
+			"--set", fmt.Sprintf("global.operator.watchNamespace=%s", namespace),
+			"--wait")
+
+	}
+	return err
 }

@@ -480,6 +480,22 @@ func DeleteWebhooks(ns string) error {
 	return nil
 }
 
+// HelmBinaryVersion executes helm version and return 2 or 3
+func HelmBinaryVersion() (string, error) {
+	out, err := runBinary(helmCmd, "version")
+	if err != nil {
+		return "", err
+	}
+
+	if strings.Contains(string(out), `SemVer:"v2.`) {
+		return "2", nil
+	}
+	if strings.Contains(string(out), `Version:"v3.`) {
+		return "3", nil
+	}
+	return "", errors.Errorf("Failed to determine helm binary version: %s", out)
+}
+
 // RunHelmBinaryWithCustomErr executes a desire binary
 func RunHelmBinaryWithCustomErr(args ...string) error {
 	out, err := runBinary(helmCmd, args...)
