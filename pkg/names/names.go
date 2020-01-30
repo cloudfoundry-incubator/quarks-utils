@@ -62,15 +62,19 @@ func DesiredManifestName(deploymentName string, version string) string {
 	return finalName
 }
 
-// EntanglementSecretName returns the name of a secret containing properties of
-// the provides section from a BOSH job
-func EntanglementSecretName(deploymentName, igName string) string {
-	return Sanitize(fmt.Sprintf("link-%s-%s", deploymentName, igName))
+// QuarksLinkSecretName returns the name of a secret used for Quarks links
+// to be mounted or used by environment variables
+func QuarksLinkSecretName(deploymentName string, suffixes ...string) string {
+	return Sanitize(strings.Join(
+		append([]string{"link", deploymentName}, suffixes...),
+		"-",
+	))
 }
 
-// EntanglementSecretKey returns the key (composed of type and name) for the k8s secret's data
-func EntanglementSecretKey(linkType, linkName string) string {
-	return fmt.Sprintf("%s.%s", linkType, linkName)
+// QuarksLinkSecretKey returns the key (composed of type and name), which is
+// used as the root level key for the data mapping in secrets
+func QuarksLinkSecretKey(linkType, linkName string) string {
+	return fmt.Sprintf("%s-%s", linkType, linkName)
 }
 
 var secretNameRegex = regexp.MustCompile("[^-][a-z0-9-]*.[a-z0-9-]*[^-]")
