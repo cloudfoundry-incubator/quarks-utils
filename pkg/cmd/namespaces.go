@@ -10,30 +10,37 @@ import (
 	"code.cloudfoundry.org/quarks-utils/pkg/config"
 )
 
-// Namespaces sets the namespaces for our operators
-func Namespaces(cfg *config.Config, log *zap.SugaredLogger, name string) string {
+// OperatorNamespace is the namespace of the service, which points to the webhook server
+func OperatorNamespace(cfg *config.Config, log *zap.SugaredLogger, name string) string {
 	operatorNamespace := viper.GetString(name)
-	watchNamespace := viper.GetString("watch-namespace")
-	if watchNamespace == "" {
-		log.Infof("No watch namespace defined. Falling back to the operator namespace.")
-		watchNamespace = operatorNamespace
-	}
 
 	cfg.OperatorNamespace = operatorNamespace
-	cfg.Namespace = watchNamespace
 
+	return operatorNamespace
+}
+
+// WatchNamespace sets the namespace which is watched and where most resources are created
+func WatchNamespace(cfg *config.Config, log *zap.SugaredLogger) string {
+	watchNamespace := viper.GetString("watch-namespace")
+	cfg.Namespace = watchNamespace
 	return watchNamespace
 }
 
-// NamespacesFlags adds to viper flags
-func NamespacesFlags(pf *flag.FlagSet, argToEnv map[string]string, name string) {
-	pf.StringP(name, "n", "default", "The operator namespace")
-	pf.StringP("watch-namespace", "", "", "Namespace to watch for BOSH deployments")
+// OperatorNamespaceFlags adds to viper flags
+func OperatorNamespaceFlags(pf *flag.FlagSet, argToEnv map[string]string, name string) {
+	pf.StringP(name, "n", "default", "The operator namespace, for the webhook service")
 
 	viper.BindPFlag(name, pf.Lookup(name))
-	viper.BindPFlag("watch-namespace", pf.Lookup("watch-namespace"))
 
 	argToEnv[name] = envName(name)
+}
+
+// WatchNamespaceFlags adds to viper flags
+func WatchNamespaceFlags(pf *flag.FlagSet, argToEnv map[string]string) {
+	pf.StringP("watch-namespace", "a", "staging", "Act on this namespace, watch for BOSH deployments and create resources")
+
+	viper.BindPFlag("watch-namespace", pf.Lookup("watch-namespace"))
+
 	argToEnv["watch-namespace"] = "WATCH_NAMESPACE"
 }
 
