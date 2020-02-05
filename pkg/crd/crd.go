@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"time"
 
+	"code.cloudfoundry.org/quarks-utils/pkg/pointers"
 	"github.com/pkg/errors"
 	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extv1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
@@ -28,6 +29,8 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 					Storage: true,
 				},
 			},
+			Validation: validation,
+			PreserveUnknownFields: pointers.Bool(false),
 			Subresources: &extv1.CustomResourceSubresources{
 				Status: &extv1.CustomResourceSubresourceStatus{},
 			},
@@ -38,10 +41,6 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 				ShortNames: shortNames,
 			},
 		},
-	}
-
-	if validation != nil {
-		crd.Spec.Validation = validation
 	}
 
 	exCrd, err := client.CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
