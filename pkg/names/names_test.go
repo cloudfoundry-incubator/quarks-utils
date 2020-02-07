@@ -61,6 +61,22 @@ var _ = Describe("Names", func() {
 		})
 	})
 
+	Context("VolumeName", func() {
+		tests := []test{
+			{arg1: "secret", result: "secret"},
+			{arg1: "secret.name", result: "name"},
+			{arg1: long63, result: long63},
+			{arg1: long63 + ".foo", result: "foo"},
+			{arg1: "foo." + long63, result: "a123456789012345678901234567890b123456789012345678901234567890c"},
+		}
+
+		It("produces valid k8s names", func() {
+			for _, t := range tests {
+				Expect(names.VolumeName(t.arg1)).To(Equal(t.result), fmt.Sprintf("%#v", t))
+			}
+		})
+	})
+
 	Context("SecretName", func() {
 		type test struct {
 			arg1   names.DeploymentSecretType
