@@ -25,6 +25,7 @@ func IsVersionedSecret(secret corev1.Secret) bool {
 
 var nameRegex = regexp.MustCompile(`^\S+-v(\d+)$`)
 
+// IsVersionedSecretName returns true if name matches the name of a versioned secret
 func IsVersionedSecretName(name string) bool {
 	return len(nameRegex.FindStringSubmatch(name)) > 0
 }

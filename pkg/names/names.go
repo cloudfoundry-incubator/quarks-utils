@@ -162,6 +162,18 @@ func JobName(eJobName string) (string, error) {
 	return fmt.Sprintf("%s-%s", name, hashID), nil
 }
 
+// VolumeName generate volume name based on secret name
+func VolumeName(secretName string) string {
+	nameSlices := strings.Split(secretName, ".")
+	volName := ""
+	if len(nameSlices) > 1 {
+		volName = nameSlices[1]
+	} else {
+		volName = nameSlices[0]
+	}
+	return Sanitize(volName)
+}
+
 var podOrdinalRegex = regexp.MustCompile(`(.*)-([0-9]+)$`)
 
 // OrdinalFromPodName returns ordinal from pod name
