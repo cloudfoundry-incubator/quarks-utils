@@ -26,24 +26,19 @@ var (
 // TearDownFunc tears down the resource
 type TearDownFunc func() error
 
-// SetUpEnvironment ensures helm binary can run,
+// SetUpEnvironment ensures helm binary can run
 // being able to reach tiller, and eventually it
 // will install the cf-operator chart.
 func SetUpEnvironment(chartPath string) (string, string, TearDownFunc, error) {
-	// Ensure tiller is there, if not
-	// then create it, via "init"
-	err := testing.RunHelmBinaryWithCustomErr("version", "-s")
+	err := testing.RunHelmBinaryWithCustomErr("version")
 	if err != nil {
 		switch err := err.(type) {
 		case *testing.CustomError:
 			if strings.Contains(err.StdOut, "could not find tiller") {
-				err := testing.RunHelmBinaryWithCustomErr("init", "--wait")
-				if err != nil {
-					return "", "", nil, errors.Wrapf(err, "%s Helm init --wait command failed.", e2eFailedMessage)
-				}
+				return "", "", nil, errors.Wrapf(err, "%s Helm v2 needs to be installed with RBAC first.", e2eFailedMessage)
 			}
 		default:
-			return "", "", nil, errors.Wrapf(err, "%s Helm version -s command failed", e2eFailedMessage)
+			return "", "", nil, errors.Wrapf(err, "%s Helm version command failed", e2eFailedMessage)
 		}
 	}
 
