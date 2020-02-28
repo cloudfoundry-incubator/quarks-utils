@@ -17,6 +17,7 @@ var _ = Describe("Names", func() {
 	}
 	long31 := "a123456789012345678901234567890"
 	long63 := long31 + "b123456789012345678901234567890c"
+	long253 := long63 + long63 + long63 + long63 + "d"
 
 	Context("JobName", func() {
 		tests := []test{
@@ -58,6 +59,34 @@ var _ = Describe("Names", func() {
 			for _, t := range tests {
 				Expect(names.Sanitize(t.arg1)).To(Equal(t.result), fmt.Sprintf("%#v", t))
 			}
+		})
+	})
+
+	Context("SanitizeSubdomain", func() {
+		tests := []test{
+			{arg1: "AB1", result: "ab1"},
+			{arg1: "ab1", result: "ab1"},
+			{arg1: "1bc", result: "1bc"},
+			{arg1: "a-b", result: "a-b"},
+			{arg1: "a_b", result: "a-b"},
+			{arg1: "a_b_123", result: "a-b-123"},
+			{arg1: "-abc", result: "abc"},
+			{arg1: "abc-", result: "abc"},
+			{arg1: "_abc_", result: "abc"},
+			{arg1: "-abc-", result: "abc"},
+			{arg1: ".a.b.c.", result: "a.b.c"},
+			{arg1: "abcü.123:4", result: "abc.1234"},
+			{arg1: long253, result: long253},
+		}
+
+		It("produces valid k8s names", func() {
+			for _, t := range tests {
+				Expect(names.SanitizeSubdomain(t.arg1)).To(Equal(t.result), fmt.Sprintf("%#v", t))
+			}
+		})
+
+		It("shortens long names", func() {
+			Expect(names.SanitizeSubdomain(long253 + "1")).To(HaveLen(253))
 		})
 	})
 
@@ -113,11 +142,16 @@ var _ = Describe("Names", func() {
 			},
 		}
 
-		It("produces valid k8s job names", func() {
+		It("produces valid k8s secret names", func() {
 			for _, t := range tests {
 				r := names.InstanceGroupSecretName(t.arg1, t.arg2, t.arg3, t.arg4)
 				Expect(r).To(Equal(t.name), fmt.Sprintf("%#v", t))
-				r = names.DeploymentSecretPrefix(t.arg1, t.arg2) + names.Sanitize(t.arg3)
+			}
+		})
+
+		It("produces valid prefixes", func() {
+			for _, t := range tests {
+				r := names.DeploymentSecretPrefix(t.arg1, t.arg2) + names.Sanitize(t.arg3)
 				Expect(r).To(Equal(t.prefix), fmt.Sprintf("%#v", t))
 			}
 		})

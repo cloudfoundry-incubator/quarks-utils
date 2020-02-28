@@ -65,7 +65,7 @@ func DesiredManifestName(deploymentName string, version string) string {
 // QuarksLinkSecretName returns the name of a secret used for Quarks links
 // to be mounted or used by environment variables
 func QuarksLinkSecretName(deploymentName string, suffixes ...string) string {
-	return Sanitize(strings.Join(
+	return SanitizeSubdomain(strings.Join(
 		append([]string{"link", deploymentName}, suffixes...),
 		"-",
 	))
@@ -92,7 +92,7 @@ func DeploymentSecretName(secretType DeploymentSecretType, deploymentName, name 
 	variableName := secretPartRegex.FindString(strings.Replace(name, "_", "-", -1))
 	secretName := secretNameRegex.FindString(deploymentName + "." + variableName)
 
-	return truncateMD5(secretName)
+	return truncateMD5(secretName, 63)
 }
 
 // DeploymentSecretPrefix returns the prefix used for our k8s secrets:
@@ -120,25 +120,32 @@ func InstanceGroupSecretName(secretType DeploymentSecretType, deploymentName str
 var allowedKubeChars = regexp.MustCompile("[^-a-z0-9]*")
 
 // Sanitize produces valid k8s names, i.e. for containers: [a-z0-9]([-a-z0-9]*[a-z0-9])?
+// The result should be DNS label compatible and usable as a path segment name.
+// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
 func Sanitize(name string) string {
 	name = strings.Replace(name, "_", "-", -1)
 	name = strings.ToLower(name)
 	name = allowedKubeChars.ReplaceAllLiteralString(name, "")
 	name = strings.TrimPrefix(name, "-")
 	name = strings.TrimSuffix(name, "-")
-	name = truncateMD5(name)
+	name = truncateMD5(name, 63)
 	return name
 }
 
-func truncateMD5(s string) string {
-	if len(s) > 63 {
-		// names are limited to 63 characters so we recalculate the name as
-		// <name trimmed to 31 characters>-<md5 hash of name>
-		sumHex := md5.Sum([]byte(s))
-		sum := hex.EncodeToString(sumHex[:])
-		s = s[:63-32] + sum
-	}
-	return s
+var allowedDNSSubdomainChars = regexp.MustCompile("[^-.a-z0-9]*")
+
+// SanitizeSubdomain allows more than Sanitize, cannot be used for DNS or path segments.
+// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names
+func SanitizeSubdomain(name string) string {
+	name = strings.Replace(name, "_", "-", -1)
+	name = strings.ToLower(name)
+	name = allowedDNSSubdomainChars.ReplaceAllLiteralString(name, "")
+	name = strings.TrimPrefix(name, "-")
+	name = strings.TrimSuffix(name, "-")
+	name = strings.TrimPrefix(name, ".")
+	name = strings.TrimSuffix(name, ".")
+	name = truncateMD5(name, 253)
+	return name
 }
 
 // GetStatefulSetName gets statefulset name from podName
@@ -220,4 +227,15 @@ func truncate(name string, max int) string {
 		return name[0:max]
 	}
 	return name
+}
+
+func truncateMD5(s string, n int) string {
+	if len(s) > n {
+		// names are limited to 63 characters so we recalculate the name as
+		// <name trimmed to 31 characters>-<md5 hash of name>
+		sumHex := md5.Sum([]byte(s))
+		sum := hex.EncodeToString(sumHex[:])
+		s = s[:n-32] + sum
+	}
+	return s
 }
