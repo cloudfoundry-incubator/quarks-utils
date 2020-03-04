@@ -148,6 +148,19 @@ func SanitizeSubdomain(name string) string {
 	return name
 }
 
+// SecretName returns the name of the secret sanitized with chars less than 63.
+func SecretName(name string) string {
+	name = strings.Replace(name, "_", "-", -1)
+	name = strings.ToLower(name)
+	name = allowedDNSSubdomainChars.ReplaceAllLiteralString(name, "")
+	name = strings.TrimPrefix(name, "-")
+	name = strings.TrimSuffix(name, "-")
+	name = strings.TrimPrefix(name, ".")
+	name = strings.TrimSuffix(name, ".")
+	name = truncateMD5(name, 63)
+	return name
+}
+
 // GetStatefulSetName gets statefulset name from podName
 func GetStatefulSetName(name string) string {
 	nameSplit := strings.Split(name, "-")

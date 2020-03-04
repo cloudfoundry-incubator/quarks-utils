@@ -106,7 +106,7 @@ var _ = Describe("Names", func() {
 		})
 	})
 
-	Context("SecretName", func() {
+	Context("Types of SecretNames", func() {
 		type test struct {
 			arg1   names.DeploymentSecretType
 			arg2   string
@@ -154,6 +154,14 @@ var _ = Describe("Names", func() {
 				r := names.DeploymentSecretPrefix(t.arg1, t.arg2) + names.Sanitize(t.arg3)
 				Expect(r).To(Equal(t.prefix), fmt.Sprintf("%#v", t))
 			}
+		})
+	})
+
+	Context("SecretName", func() {
+		It("it produces valid k8 secret names", func() {
+			name := "foo-bar-testalphabets-abcdefg.&6(hijklmnopqrstuvwxyz123456789123456789"
+			sanitizedName := names.SecretName(name)
+			Expect(sanitizedName).To(Equal("foo-bar-testalphabets-abcdefg.63f945fccc6047f258ef5c4ce97598536"))
 		})
 	})
 
