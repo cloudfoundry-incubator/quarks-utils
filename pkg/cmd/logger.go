@@ -5,9 +5,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// LogLevel returns the log-level argument
 func LogLevel() string {
-	level := viper.GetString("log-level")
-	return level
+	return viper.GetString("log-level")
 }
 
 // LoggerFlags adds to viper flags

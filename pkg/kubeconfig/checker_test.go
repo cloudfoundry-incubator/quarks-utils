@@ -87,7 +87,7 @@ var _ = Describe("Checker", func() {
 	Describe("checkConfigError", func() {
 		It("Error() should construct the error correctly", func() {
 			err := checkConfigError{fmt.Errorf("some error")}
-			Expect(err.Error()).To(Equal(fmt.Sprintf("invalid kube config: some error")))
+			Expect(err.Error()).To(Equal("invalid kube config: some error"))
 		})
 	})
 

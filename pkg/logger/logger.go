@@ -43,7 +43,7 @@ func New(level string, options ...zap.Option) *zap.SugaredLogger {
 	return newLogger(level, options...).Sugar()
 }
 
-// NewControllerLogger returns a new logger. which does not include the ctxlog wrapper in
+// NewControllerLogger returns a new logger, which does not include the ctxlog wrapper in
 // caller annotations and sets up controller-runtime to use it
 func NewControllerLogger(level string) *zap.SugaredLogger {
 	logger := newLogger(level, skipWrapper)
