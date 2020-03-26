@@ -1,10 +1,12 @@
 package versionedsecretstore
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"code.cloudfoundry.org/quarks-utils/pkg/names"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -41,6 +43,12 @@ func NamePrefix(name string) string {
 		return ""
 	}
 	return name[:n]
+}
+
+// VersionedName returns a secret name with the version appended
+func VersionedName(namePrefix string, version int) string {
+	proposedName := fmt.Sprintf("%s-v%d", namePrefix, version)
+	return names.SanitizeSubdomain(proposedName)
 }
 
 // VersionFromName gets version from versioned secret name
