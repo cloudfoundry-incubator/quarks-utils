@@ -221,7 +221,7 @@ var _ = Describe("Getter", func() {
 	Describe("getConfigError", func() {
 		It("Error() should construct the error correctly", func() {
 			err := getConfigError{fmt.Errorf("some error")}
-			Expect(err.Error()).To(Equal(fmt.Sprintf("failed to get kube config: some error")))
+			Expect(err.Error()).To(Equal("failed to get kube config: some error"))
 		})
 	})
 })

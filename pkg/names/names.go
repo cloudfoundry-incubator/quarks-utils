@@ -13,10 +13,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// DeploymentSecretType lists all the types of secrets used in
-// the lifecycle of a BOSHDeployment
-type DeploymentSecretType int
-
 const (
 	// ConfigMap is used in log messages
 	ConfigMap = "configmap"
@@ -24,117 +20,34 @@ const (
 	Secret = "secret"
 )
 
-const (
-	// DeploymentSecretTypeManifestWithOps is a manifest that has ops files applied
-	DeploymentSecretTypeManifestWithOps DeploymentSecretType = iota
-	// DeploymentSecretTypeDesiredManifest is a manifest whose variables have been interpolated
-	DeploymentSecretTypeDesiredManifest
-	// DeploymentSecretTypeVariable is a BOSH variable generated using an QuarksSecret
-	DeploymentSecretTypeVariable
-	// DeploymentSecretTypeInstanceGroupResolvedProperties is a YAML file containing all properties needed to render an Instance Group
-	DeploymentSecretTypeInstanceGroupResolvedProperties
-	// DeploymentSecretBpmInformation is a YAML file containing the BPM information for one instance group
-	DeploymentSecretBpmInformation
-)
+var allowedDNSLabelChars = regexp.MustCompile("[^-a-z0-9]*")
 
-func (s DeploymentSecretType) String() string {
-	return [...]string{
-		"with-ops",
-		"desired",
-		"var",
-		"ig-resolved",
-		"bpm"}[s]
-}
-
-// DesiredManifestPrefix returns the prefix of the desired manifest's name:
-func DesiredManifestPrefix(deploymentName string) string {
-	return Sanitize(deploymentName) + "."
-}
-
-// DesiredManifestName returns the versioned name of the desired manifest
-// secret, e.g. 'test.desired-manifest-v1'
-func DesiredManifestName(deploymentName string, version string) string {
-	finalName := DesiredManifestPrefix(deploymentName) + "desired-manifest"
-	if version != "" {
-		finalName = fmt.Sprintf("%s-v%s", finalName, version)
-	}
-
-	return finalName
-}
-
-// QuarksLinkSecretName returns the name of a secret used for Quarks links
-// to be mounted or used by environment variables
-func QuarksLinkSecretName(deploymentName string, suffixes ...string) string {
-	return SanitizeSubdomain(strings.Join(
-		append([]string{"link", deploymentName}, suffixes...),
-		"-",
-	))
-}
-
-// QuarksLinkSecretKey returns the key (composed of type and name), which is
-// used as the root level key for the data mapping in secrets
-func QuarksLinkSecretKey(linkType, linkName string) string {
-	return fmt.Sprintf("%s-%s", linkType, linkName)
-}
-
-var secretNameRegex = regexp.MustCompile("[^-][a-z0-9-]*.[a-z0-9-]*[^-]")
-var secretPartRegex = regexp.MustCompile("[a-z0-9-]*")
-
-// DeploymentSecretName generates a Secret name for a given name and a deployment
-func DeploymentSecretName(secretType DeploymentSecretType, deploymentName, name string) string {
-	if name == "" {
-		name = secretType.String()
-	} else {
-		name = fmt.Sprintf("%s-%s", secretType, name)
-	}
-
-	deploymentName = secretPartRegex.FindString(strings.Replace(deploymentName, "_", "-", -1))
-	variableName := secretPartRegex.FindString(strings.Replace(name, "_", "-", -1))
-	secretName := secretNameRegex.FindString(deploymentName + "." + variableName)
-
-	return truncateMD5(secretName, 63)
-}
-
-// DeploymentSecretPrefix returns the prefix used for our k8s secrets:
-// `<deployment-name>.<secretType>.
-func DeploymentSecretPrefix(secretType DeploymentSecretType, deploymentName string) string {
-	return DeploymentSecretName(secretType, deploymentName, "") + "."
-}
-
-// InstanceGroupSecretName returns the name of a k8s secret:
-// `<deployment-name>.<secretType>.<instance-group>-v<version>` secret.
+// DNSLabelSafe filters invalid characters and returns a string that is safe to use as a DNS label.
+// It does not enforce the required string length, see `Sanitize`.
 //
-// These secrets are created by QuarksJob and mounted on containers, e.g.
-// for the template rendering.
-func InstanceGroupSecretName(secretType DeploymentSecretType, deploymentName string, igName string, version string) string {
-	prefix := DeploymentSecretPrefix(secretType, deploymentName)
-	finalName := prefix + Sanitize(igName)
-
-	if version != "" {
-		finalName = fmt.Sprintf("%s-v%s", finalName, version)
-	}
-
-	return finalName
-}
-
-var allowedKubeChars = regexp.MustCompile("[^-a-z0-9]*")
-
-// Sanitize produces valid k8s names, i.e. for containers: [a-z0-9]([-a-z0-9]*[a-z0-9])?
-// The result should be DNS label compatible and usable as a path segment name.
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
-func Sanitize(name string) string {
+func DNSLabelSafe(name string) string {
 	name = strings.Replace(name, "_", "-", -1)
 	name = strings.ToLower(name)
-	name = allowedKubeChars.ReplaceAllLiteralString(name, "")
-	name = strings.TrimPrefix(name, "-")
-	name = strings.TrimSuffix(name, "-")
-	name = truncateMD5(name, 63)
+	name = allowedDNSLabelChars.ReplaceAllLiteralString(name, "")
+	name = strings.TrimLeft(name, "-")
+	name = strings.TrimRight(name, "-")
 	return name
+}
+
+// Sanitize produces valid k8s names, i.e. for containers: [a-z0-9]([-a-z0-9]*[a-z0-9])?
+// The result is DNS label compatible and usable as a path segment name.
+//
+// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
+func Sanitize(name string) string {
+	name = DNSLabelSafe(name)
+	return TruncateMD5(name, 63)
 }
 
 var allowedDNSSubdomainChars = regexp.MustCompile("[^-.a-z0-9]*")
 
 // SanitizeSubdomain allows more than Sanitize, cannot be used for DNS or path segments.
+//
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names
 func SanitizeSubdomain(name string) string {
 	name = strings.Replace(name, "_", "-", -1)
@@ -144,7 +57,7 @@ func SanitizeSubdomain(name string) string {
 	name = strings.TrimSuffix(name, "-")
 	name = strings.TrimPrefix(name, ".")
 	name = strings.TrimSuffix(name, ".")
-	name = truncateMD5(name, 253)
+	name = TruncateMD5(name, 253)
 	return name
 }
 
@@ -229,13 +142,31 @@ func truncate(name string, max int) string {
 	return name
 }
 
-func truncateMD5(s string, n int) string {
-	if len(s) > n {
-		// names are limited to 63 characters so we recalculate the name as
-		// <name trimmed to 31 characters>-<md5 hash of name>
-		sumHex := md5.Sum([]byte(s))
-		sum := hex.EncodeToString(sumHex[:])
-		s = s[:n-32] + sum
+// TruncateMD5 truncates the string to n chars and adds a hex encoded md5
+// sum. Producing a uniq representation of the original string, if maxLen >= 32.
+// Example: names are limited to 63 characters so we recalculate the name as
+// <name trimmed to 30 characters>-<md5 hash of name>
+func TruncateMD5(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
 	}
-	return s
+
+	sumHex := md5.Sum([]byte(s))
+	sum := hex.EncodeToString(sumHex[:]) // 32 chars
+
+	suffix := "-" + sum
+	suffixLen := 33
+
+	// enough space for suffix?
+	if maxLen < suffixLen {
+		return sum[:maxLen]
+	}
+	if maxLen == suffixLen {
+		return sum
+	}
+
+	// s > maxLen now
+	// maxLen > 33 now
+	last := maxLen - suffixLen
+	return s[:last] + suffix
 }
