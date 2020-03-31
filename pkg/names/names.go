@@ -22,15 +22,16 @@ const (
 
 var allowedDNSLabelChars = regexp.MustCompile("[^-a-z0-9]*")
 
-// DNSLabelSafe returns a string which is safe to use as a DNS label
+// DNSLabelSafe filters invalid characters and returns a string that is safe to use as a DNS label.
+// It does not enforce the required string length, see `Sanitize`.
 //
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names
 func DNSLabelSafe(name string) string {
 	name = strings.Replace(name, "_", "-", -1)
 	name = strings.ToLower(name)
 	name = allowedDNSLabelChars.ReplaceAllLiteralString(name, "")
-	name = strings.TrimPrefix(name, "-")
-	name = strings.TrimSuffix(name, "-")
+	name = strings.TrimLeft(name, "-")
+	name = strings.TrimRight(name, "-")
 	return name
 }
 
@@ -141,15 +142,31 @@ func truncate(name string, max int) string {
 	return name
 }
 
-// TruncateMD5 truncates the string after n chars and add a hex encoded md5
-// sum, to produce a uniq representation of the original string.  Example:
-// names are limited to 63 characters so we recalculate the name as <name
-// trimmed to 31 characters>-<md5 hash of name>
-func TruncateMD5(s string, n int) string {
-	if len(s) > n {
-		sumHex := md5.Sum([]byte(s))
-		sum := hex.EncodeToString(sumHex[:])
-		s = s[:n-32] + sum
+// TruncateMD5 truncates the string to n chars and adds a hex encoded md5
+// sum. Producing a uniq representation of the original string, if maxLen >= 32.
+// Example: names are limited to 63 characters so we recalculate the name as
+// <name trimmed to 30 characters>-<md5 hash of name>
+func TruncateMD5(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
 	}
-	return s
+
+	sumHex := md5.Sum([]byte(s))
+	sum := hex.EncodeToString(sumHex[:]) // 32 chars
+
+	suffix := "-" + sum
+	suffixLen := 33
+
+	// enough space for suffix?
+	if maxLen < suffixLen {
+		return sum[:maxLen]
+	}
+	if maxLen == suffixLen {
+		return sum
+	}
+
+	// s > maxLen now
+	// maxLen > 33 now
+	last := maxLen - suffixLen
+	return s[:last] + suffix
 }
