@@ -26,6 +26,23 @@ var (
 // TearDownFunc tears down the resource
 type TearDownFunc func() error
 
+// TearDownAll calls all passed in tear down functions in order
+func TearDownAll(funcs []TearDownFunc) error {
+	var messages string
+	for _, f := range funcs {
+		if f != nil {
+			err := f()
+			if err != nil {
+				messages = fmt.Sprintf("%v%v\n", messages, err.Error())
+			}
+		}
+	}
+	if messages != "" {
+		return errors.New(messages)
+	}
+	return nil
+}
+
 // SetUpEnvironment ensures helm binary can run
 // being able to reach tiller, and eventually it
 // will install the cf-operator chart.
