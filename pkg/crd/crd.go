@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"time"
 
-	"code.cloudfoundry.org/quarks-utils/pkg/pointers"
 	"github.com/pkg/errors"
-	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	extv1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+
+	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	extv1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -15,7 +15,7 @@ import (
 )
 
 // ApplyCRD creates or updates the CRD
-func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error {
+func ApplyCRD(client extv1client.ApiextensionsV1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error {
 	crd := &extv1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: crdName,
@@ -27,12 +27,11 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 					Name:    groupVersion.Version,
 					Served:  true,
 					Storage: true,
+					Schema:  validation,
+					Subresources: &extv1.CustomResourceSubresources{
+						Status: &extv1.CustomResourceSubresourceStatus{},
+					},
 				},
-			},
-			Validation: validation,
-			PreserveUnknownFields: pointers.Bool(false),
-			Subresources: &extv1.CustomResourceSubresources{
-				Status: &extv1.CustomResourceSubresourceStatus{},
 			},
 			Scope: extv1.NamespaceScoped,
 			Names: extv1.CustomResourceDefinitionNames{
@@ -67,7 +66,7 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 }
 
 // WaitForCRDReady blocks until the CRD is ready.
-func WaitForCRDReady(client extv1client.ApiextensionsV1beta1Interface, crdName string) error {
+func WaitForCRDReady(client extv1client.ApiextensionsV1Interface, crdName string) error {
 	err := wait.ExponentialBackoff(
 		wait.Backoff{
 			Duration: time.Second,
