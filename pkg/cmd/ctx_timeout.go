@@ -17,7 +17,7 @@ func CtxTimeOut(cfg *config.Config) {
 
 // CtxTimeOutFlags adds to viper flags
 func CtxTimeOutFlags(pf *flag.FlagSet, argToEnv map[string]string) {
-	pf.Int("ctx-timeout", 30, "context timeout for each k8s API request in seconds")
+	pf.Int("ctx-timeout", 300, "context timeout for each k8s API request in seconds")
 	viper.BindPFlag("ctx-timeout", pf.Lookup("ctx-timeout"))
 	argToEnv["ctx-timeout"] = "CTX_TIMEOUT"
 }
