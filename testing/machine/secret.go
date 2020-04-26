@@ -1,6 +1,8 @@
 package machine
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
@@ -12,9 +14,9 @@ import (
 // CreateSecret creates a secret and returns a function to delete it
 func (m *Machine) CreateSecret(namespace string, secret corev1.Secret) (TearDownFunc, error) {
 	client := m.Clientset.CoreV1().Secrets(namespace)
-	_, err := client.Create(&secret)
+	_, err := client.Create(context.Background(), &secret, metav1.CreateOptions{})
 	return func() error {
-		err := client.Delete(secret.GetName(), &metav1.DeleteOptions{})
+		err := client.Delete(context.Background(), secret.GetName(), metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
@@ -25,9 +27,9 @@ func (m *Machine) CreateSecret(namespace string, secret corev1.Secret) (TearDown
 // UpdateSecret updates a secret and returns a function to delete it
 func (m *Machine) UpdateSecret(namespace string, secret corev1.Secret) (*corev1.Secret, TearDownFunc, error) {
 	client := m.Clientset.CoreV1().Secrets(namespace)
-	s, err := client.Update(&secret)
+	s, err := client.Update(context.Background(), &secret, metav1.UpdateOptions{})
 	return s, func() error {
-		err := client.Delete(secret.GetName(), &metav1.DeleteOptions{})
+		err := client.Delete(context.Background(), secret.GetName(), metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
@@ -46,7 +48,7 @@ func (m *Machine) CollectSecret(namespace string, name string) (*corev1.Secret, 
 
 // GetSecret fetches the specified secret
 func (m *Machine) GetSecret(namespace string, name string) (*corev1.Secret, error) {
-	secret, err := m.Clientset.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+	secret, err := m.Clientset.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "waiting for secret "+name)
 	}
@@ -76,7 +78,7 @@ type SecretChangedFunc func(corev1.Secret) bool
 func (m *Machine) WaitForSecretChange(namespace string, name string, changed SecretChangedFunc) error {
 	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		client := m.Clientset.CoreV1().Secrets(namespace)
-		s, err := client.Get(name, metav1.GetOptions{})
+		s, err := client.Get(context.Background(), name, metav1.GetOptions{})
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return false, nil
@@ -90,7 +92,7 @@ func (m *Machine) WaitForSecretChange(namespace string, name string, changed Sec
 
 // SecretExists returns true if the secret by that name exist
 func (m *Machine) SecretExists(namespace string, name string) (bool, error) {
-	_, err := m.Clientset.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+	_, err := m.Clientset.CoreV1().Secrets(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -104,7 +106,8 @@ func (m *Machine) SecretExists(namespace string, name string) (bool, error) {
 // DeleteSecrets deletes all the secrets
 func (m *Machine) DeleteSecrets(namespace string) (bool, error) {
 	err := m.Clientset.CoreV1().Secrets(namespace).DeleteCollection(
-		&metav1.DeleteOptions{},
+		context.Background(),
+		metav1.DeleteOptions{},
 		metav1.ListOptions{},
 	)
 	if err != nil {

@@ -16,27 +16,27 @@ type versionedSecretStoreClientsetBackend struct {
 }
 
 func (b *versionedSecretStoreClientsetBackend) Create(ctx context.Context, secret *corev1.Secret) error {
-	_, err := b.clientset.CoreV1().Secrets(secret.Namespace).Create(secret)
+	_, err := b.clientset.CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 	return err
 }
 
 func (b *versionedSecretStoreClientsetBackend) Get(ctx context.Context, nn types.NamespacedName) (*corev1.Secret, error) {
-	return b.clientset.CoreV1().Secrets(nn.Namespace).Get(nn.Name, metav1.GetOptions{})
+	return b.clientset.CoreV1().Secrets(nn.Namespace).Get(ctx, nn.Name, metav1.GetOptions{})
 }
 
 func (b *versionedSecretStoreClientsetBackend) Update(ctx context.Context, secret *corev1.Secret) error {
-	_, err := b.clientset.CoreV1().Secrets(secret.Namespace).Update(secret)
+	_, err := b.clientset.CoreV1().Secrets(secret.Namespace).Update(ctx, secret, metav1.UpdateOptions{})
 	return err
 }
 
 func (b *versionedSecretStoreClientsetBackend) Delete(ctx context.Context, secret *corev1.Secret) error {
-	err := b.clientset.CoreV1().Secrets(secret.Namespace).Delete(secret.Name, &metav1.DeleteOptions{})
+	err := b.clientset.CoreV1().Secrets(secret.Namespace).Delete(ctx, secret.Name, metav1.DeleteOptions{})
 	return err
 }
 
 func (b *versionedSecretStoreClientsetBackend) List(ctx context.Context, namespace string, matchLabels map[string]string) (*corev1.SecretList, error) {
 
-	secrets, err := b.clientset.CoreV1().Secrets(namespace).List(metav1.ListOptions{
+	secrets, err := b.clientset.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labels.Set(matchLabels).String(),
 	})
 	return secrets, err

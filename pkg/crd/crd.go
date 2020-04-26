@@ -1,6 +1,7 @@
 package crd
 
 import (
+	"context"
 	"reflect"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 )
 
 // ApplyCRD creates or updates the CRD
-func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error {
+func ApplyCRD(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error {
 	crd := &extv1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: crdName,
@@ -29,7 +30,7 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 					Storage: true,
 				},
 			},
-			Validation: validation,
+			Validation:            validation,
 			PreserveUnknownFields: pointers.Bool(false),
 			Subresources: &extv1.CustomResourceSubresources{
 				Status: &extv1.CustomResourceSubresourceStatus{},
@@ -43,12 +44,12 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 		},
 	}
 
-	exCrd, err := client.CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
+	exCrd, err := client.CustomResourceDefinitions().Get(ctx, crdName, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
 			return errors.Wrapf(err, "getting CRD '%s'", crdName)
 		}
-		_, err := client.CustomResourceDefinitions().Create(crd)
+		_, err := client.CustomResourceDefinitions().Create(ctx, crd, metav1.CreateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "creating CRD '%s'", crdName)
 		}
@@ -57,7 +58,7 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 
 	if !reflect.DeepEqual(crd.Spec, exCrd.Spec) {
 		crd.ResourceVersion = exCrd.ResourceVersion
-		_, err = client.CustomResourceDefinitions().Update(crd)
+		_, err = client.CustomResourceDefinitions().Update(ctx, crd, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "updating CRD '%s'", crdName)
 		}
@@ -67,7 +68,7 @@ func ApplyCRD(client extv1client.ApiextensionsV1beta1Interface, crdName, kind, p
 }
 
 // WaitForCRDReady blocks until the CRD is ready.
-func WaitForCRDReady(client extv1client.ApiextensionsV1beta1Interface, crdName string) error {
+func WaitForCRDReady(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName string) error {
 	err := wait.ExponentialBackoff(
 		wait.Backoff{
 			Duration: time.Second,
@@ -75,7 +76,7 @@ func WaitForCRDReady(client extv1client.ApiextensionsV1beta1Interface, crdName s
 			Factor:   1,
 		},
 		func() (bool, error) {
-			crd, err := client.CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
+			crd, err := client.CustomResourceDefinitions().Get(ctx, crdName, metav1.GetOptions{})
 			if err != nil {
 				return false, nil
 			}

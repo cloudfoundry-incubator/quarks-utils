@@ -2,6 +2,7 @@ package machine
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"regexp"
 	"strings"
@@ -33,7 +34,7 @@ func (m *Machine) GetPodContainerLogs(namespace, podName, containerName string) 
 
 func (m *Machine) podLogs(namespace, podName string, opts corev1.PodLogOptions) (string, error) {
 	req := m.Clientset.CoreV1().Pods(namespace).GetLogs(podName, &opts)
-	podLogs, err := req.Stream()
+	podLogs, err := req.Stream(context.Background())
 	if err != nil {
 		return "", errors.Wrapf(err, "error opening log stream for pod")
 	}
