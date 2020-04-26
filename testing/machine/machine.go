@@ -51,16 +51,10 @@ func NewMachine() Machine {
 
 // CreateNamespace creates a namespace, it doesn't return an error if the namespace exists
 func (m *Machine) CreateNamespace(namespace string) (TearDownFunc, error) {
-	return m.CreateLabeledNamespace(namespace, map[string]string{})
-}
-
-// CreateLabeledNamespace creates a namespace, it doesn't return an error if the namespace exists
-func (m *Machine) CreateLabeledNamespace(namespace string, labels map[string]string) (TearDownFunc, error) {
 	client := m.Clientset.CoreV1().Namespaces()
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   namespace,
-			Labels: labels,
+			Name: namespace,
 		},
 	}
 	_, err := client.Create(context.Background(), ns, metav1.CreateOptions{})

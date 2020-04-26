@@ -19,8 +19,8 @@ type Config struct {
 	CtxTimeOut           time.Duration
 	MeltdownDuration     time.Duration
 	MeltdownRequeueAfter time.Duration
-	// MonitoredID we look for in namespace labels, before acting
-	MonitoredID string
+	// Namespace that is being watched by controllers
+	Namespace string
 	// OperatorNamespace is where the webhook services of the operator are placed
 	OperatorNamespace           string
 	WebhookUseServiceRef        bool
@@ -39,5 +39,24 @@ func NewDefaultConfig(fs afero.Fs) *Config {
 		MeltdownDuration:     MeltdownDuration,
 		MeltdownRequeueAfter: MeltdownRequeueAfter,
 		Fs:                   fs,
+	}
+}
+
+// NewConfig returns a new Config for a manager of controllers
+func NewConfig(namespace string, operatorNamespace string, ctxTimeOut int, useServiceRef bool, host string, port int32, fs afero.Fs, maxBoshDeploymentWorkers, maxQuarksJobWorkers, maxQuarksSecretWorkers, maxQuarksStatefulSetWorkers int) *Config {
+	return &Config{
+		CtxTimeOut:                  time.Duration(ctxTimeOut) * time.Second,
+		MeltdownDuration:            MeltdownDuration,
+		MeltdownRequeueAfter:        MeltdownRequeueAfter,
+		Namespace:                   namespace,
+		OperatorNamespace:           operatorNamespace,
+		WebhookUseServiceRef:        useServiceRef,
+		WebhookServerHost:           host,
+		WebhookServerPort:           port,
+		Fs:                          fs,
+		MaxBoshDeploymentWorkers:    maxBoshDeploymentWorkers,
+		MaxQuarksJobWorkers:         maxQuarksJobWorkers,
+		MaxQuarksSecretWorkers:      maxQuarksSecretWorkers,
+		MaxQuarksStatefulSetWorkers: maxQuarksStatefulSetWorkers,
 	}
 }
