@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,9 +18,9 @@ import (
 // CreatePod creates a default pod and returns a function to delete it
 func (m *Machine) CreatePod(namespace string, pod corev1.Pod) (TearDownFunc, error) {
 	client := m.Clientset.CoreV1().Pods(namespace)
-	_, err := client.Create(&pod)
+	_, err := client.Create(context.Background(), &pod, metav1.CreateOptions{})
 	return func() error {
-		err := client.Delete(pod.GetName(), &metav1.DeleteOptions{})
+		err := client.Delete(context.Background(), pod.GetName(), metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
@@ -72,7 +73,7 @@ func (m *Machine) WaitForPodsDelete(namespace string) error {
 
 // PodsDeleted returns true if the all pods are deleted
 func (m *Machine) PodsDeleted(namespace string) (bool, error) {
-	podList, err := m.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	podList, err := m.Clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return false, err
 	}
@@ -84,7 +85,7 @@ func (m *Machine) PodsDeleted(namespace string) (bool, error) {
 
 // PodRunning returns true if the pod by that name is in state running
 func (m *Machine) PodRunning(namespace string, name string) (bool, error) {
-	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -100,7 +101,7 @@ func (m *Machine) PodRunning(namespace string, name string) (bool, error) {
 
 // PodReady returns true if the pod by that name is ready.
 func (m *Machine) PodReady(namespace string, name string) (bool, error) {
-	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -123,7 +124,7 @@ func (m *Machine) PodReady(namespace string, name string) (bool, error) {
 
 // InitContainerRunning returns true if the pod by that name has a specific init container that is in state running
 func (m *Machine) InitContainerRunning(namespace, podName, containerName string) (bool, error) {
-	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(context.Background(), podName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -146,7 +147,7 @@ func (m *Machine) InitContainerRunning(namespace, podName, containerName string)
 
 // PodsFailing returns true if the pod by that name exist and is in a failed state
 func (m *Machine) PodsFailing(namespace string, labels string) (bool, error) {
-	pods, err := m.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := m.Clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
 		LabelSelector: labels,
 	})
 	if err != nil {
@@ -181,7 +182,7 @@ func (m *Machine) PodsFailing(namespace string, labels string) (bool, error) {
 // Note that only the first page of pods is considered - don't use this if you have a
 // long pod list that you care about
 func (m *Machine) PodsRunning(namespace string, labels string) (bool, error) {
-	pods, err := m.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := m.Clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
 		LabelSelector: labels,
 	})
 	if err != nil {
@@ -203,7 +204,7 @@ func (m *Machine) PodsRunning(namespace string, labels string) (bool, error) {
 
 // PodCount returns the number of matching pods
 func (m *Machine) PodCount(namespace string, labels string, match func(corev1.Pod) bool) (int, error) {
-	pods, err := m.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := m.Clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
 		LabelSelector: labels,
 	})
 	if err != nil {
@@ -221,7 +222,7 @@ func (m *Machine) PodCount(namespace string, labels string, match func(corev1.Po
 
 // GetPods returns all the pods selected by labels
 func (m *Machine) GetPods(namespace string, labels string) (*corev1.PodList, error) {
-	pods, err := m.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := m.Clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
 		LabelSelector: labels,
 	})
 	if err != nil {
@@ -234,7 +235,7 @@ func (m *Machine) GetPods(namespace string, labels string) (*corev1.PodList, err
 
 // GetPod returns pod by name
 func (m *Machine) GetPod(namespace string, name string) (*corev1.Pod, error) {
-	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query for pod by name: %v", name)
 	}
@@ -245,9 +246,9 @@ func (m *Machine) GetPod(namespace string, name string) (*corev1.Pod, error) {
 // UpdatePod updates a pod and returns a function to delete it
 func (m *Machine) UpdatePod(namespace string, pod corev1.Pod) (*corev1.Pod, TearDownFunc, error) {
 	client := m.Clientset.CoreV1().Pods(namespace)
-	s, err := client.Update(&pod)
+	s, err := client.Update(context.Background(), &pod, metav1.UpdateOptions{})
 	return s, func() error {
-		err := client.Delete(pod.GetName(), &metav1.DeleteOptions{})
+		err := client.Delete(context.Background(), pod.GetName(), metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
@@ -257,7 +258,7 @@ func (m *Machine) UpdatePod(namespace string, pod corev1.Pod) (*corev1.Pod, Tear
 
 // PodLabeled returns true if the pod is labeled correctly
 func (m *Machine) PodLabeled(namespace string, name string, desiredLabel, desiredValue string) (bool, error) {
-	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, err

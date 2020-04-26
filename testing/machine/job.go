@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -15,7 +16,8 @@ import (
 // DeleteJobs deletes all the jobs
 func (m *Machine) DeleteJobs(namespace string, labels string) (bool, error) {
 	err := m.Clientset.BatchV1().Jobs(namespace).DeleteCollection(
-		&metav1.DeleteOptions{},
+		context.Background(),
+		metav1.DeleteOptions{},
 		metav1.ListOptions{LabelSelector: labels},
 	)
 	if err != nil {
@@ -28,7 +30,7 @@ func (m *Machine) DeleteJobs(namespace string, labels string) (bool, error) {
 // WaitForJobsDeleted waits until the jobs no longer exists
 func (m *Machine) WaitForJobsDeleted(namespace string, labels string) error {
 	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
-		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{
+		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{
 			LabelSelector: labels,
 		})
 		if err != nil {
@@ -41,7 +43,7 @@ func (m *Machine) WaitForJobsDeleted(namespace string, labels string) error {
 
 // JobExists returns true if job with that name exists
 func (m *Machine) JobExists(namespace string, name string) (bool, error) {
-	_, err := m.Clientset.BatchV1().Jobs(namespace).Get(name, metav1.GetOptions{})
+	_, err := m.Clientset.BatchV1().Jobs(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -57,7 +59,7 @@ func (m *Machine) JobExists(namespace string, name string) (bool, error) {
 func (m *Machine) CollectJobs(namespace string, labels string, n int) ([]batchv1.Job, error) {
 	found := map[string]batchv1.Job{}
 	err := wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
-		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{
+		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{
 			LabelSelector: labels,
 		})
 		if err != nil {
@@ -86,7 +88,7 @@ func (m *Machine) CollectJobs(namespace string, labels string, n int) ([]batchv1
 func (m *Machine) WaitForJobExists(namespace string, labels string) (bool, error) {
 	found := false
 	err := wait.Poll(5*time.Second, 30*time.Second, func() (bool, error) {
-		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(metav1.ListOptions{
+		jobs, err := m.Clientset.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{
 			LabelSelector: labels,
 		})
 		if err != nil {

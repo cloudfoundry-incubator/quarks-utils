@@ -1,6 +1,8 @@
 package machine
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
@@ -12,9 +14,9 @@ import (
 // CreateConfigMap creates a ConfigMap and returns a function to delete it
 func (m *Machine) CreateConfigMap(namespace string, configMap corev1.ConfigMap) (TearDownFunc, error) {
 	client := m.Clientset.CoreV1().ConfigMaps(namespace)
-	_, err := client.Create(&configMap)
+	_, err := client.Create(context.Background(), &configMap, metav1.CreateOptions{})
 	return func() error {
-		err := client.Delete(configMap.GetName(), &metav1.DeleteOptions{})
+		err := client.Delete(context.Background(), configMap.GetName(), metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
@@ -25,9 +27,9 @@ func (m *Machine) CreateConfigMap(namespace string, configMap corev1.ConfigMap) 
 // UpdateConfigMap updates a ConfigMap and returns a function to delete it
 func (m *Machine) UpdateConfigMap(namespace string, configMap corev1.ConfigMap) (*corev1.ConfigMap, TearDownFunc, error) {
 	client := m.Clientset.CoreV1().ConfigMaps(namespace)
-	cm, err := client.Update(&configMap)
+	cm, err := client.Update(context.Background(), &configMap, metav1.UpdateOptions{})
 	return cm, func() error {
-		err := client.Delete(configMap.GetName(), &metav1.DeleteOptions{})
+		err := client.Delete(context.Background(), configMap.GetName(), metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
@@ -37,7 +39,7 @@ func (m *Machine) UpdateConfigMap(namespace string, configMap corev1.ConfigMap) 
 
 // GetConfigMap gets a ConfigMap by name
 func (m *Machine) GetConfigMap(namespace string, name string) (*corev1.ConfigMap, error) {
-	configMap, err := m.Clientset.CoreV1().ConfigMaps(namespace).Get(name, metav1.GetOptions{})
+	configMap, err := m.Clientset.CoreV1().ConfigMaps(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		return &corev1.ConfigMap{}, errors.Wrapf(err, "failed to query for configMap by name: %v", name)
 	}
@@ -54,7 +56,7 @@ func (m *Machine) WaitForConfigMap(namespace string, name string) error {
 
 // ConfigMapExists returns true if the secret by that name exist
 func (m *Machine) ConfigMapExists(namespace string, name string) (bool, error) {
-	_, err := m.Clientset.CoreV1().ConfigMaps(namespace).Get(name, metav1.GetOptions{})
+	_, err := m.Clientset.CoreV1().ConfigMaps(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
