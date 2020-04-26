@@ -11,13 +11,13 @@ import (
 )
 
 // ApplyFn is a function that applies CRDs
-type ApplyFn func(config *rest.Config) error
+type ApplyFn func(ctx context.Context, config *rest.Config) error
 
 // ApplyCRDs calls apply to create the operators CRDs
 func ApplyCRDs(ctx context.Context, apply ApplyFn, restConfig *rest.Config) error {
 	if viper.GetBool("apply-crd") {
 		ctxlog.Info(ctx, "Applying CRDs...")
-		err := apply(restConfig)
+		err := apply(ctx, restConfig)
 		if err != nil {
 			return err
 		}
