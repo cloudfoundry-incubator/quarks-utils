@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	crlog "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -31,6 +32,7 @@ func newLogger(level string, options ...zap.Option) *zap.Logger {
 	cfg := zap.NewDevelopmentConfig()
 	cfg.Development = false
 	cfg.Level = zap.NewAtomicLevelAt(l)
+	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	logger, err := cfg.Build(options...)
 	if err != nil {
 		golog.Fatalf("cannot initialize ZAP logger: %v", err)
