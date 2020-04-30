@@ -79,7 +79,7 @@ type versionedSecretStoreBackend interface {
 // the Custom Resource Definition that generated it.
 type VersionedSecretStore interface {
 	SetSecretReferences(ctx context.Context, namespace string, podSpec *corev1.PodSpec) error
-	Create(ctx context.Context, namespace string, ownerName string, ownerID types.UID, secretName string, secretData map[string]string, labels map[string]string, sourceDescription string) error
+	Create(ctx context.Context, namespace string, ownerName string, ownerID types.UID, secretName string, secretData map[string]string, annotations map[string]string, labels map[string]string, sourceDescription string) error
 	Get(ctx context.Context, namespace string, secretName string, version int) (*corev1.Secret, error)
 	Latest(ctx context.Context, namespace string, secretName string) (*corev1.Secret, error)
 	List(ctx context.Context, namespace string, secretName string) ([]corev1.Secret, error)
@@ -163,7 +163,15 @@ func (p VersionedSecretImpl) SetSecretReferences(ctx context.Context, namespace 
 }
 
 // Create creates a new version of the secret from secret data
-func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, ownerName string, ownerID types.UID, secretName string, secretData map[string]string, labels map[string]string, sourceDescription string) error {
+func (p VersionedSecretImpl) Create(ctx context.Context,
+	namespace string,
+	ownerName string,
+	ownerID types.UID,
+	secretName string,
+	secretData map[string]string,
+	annotations map[string]string,
+	labels map[string]string,
+	sourceDescription string) error {
 	latest, err := p.Latest(ctx, namespace, secretName)
 	if err == nil {
 		labelsIdentical := true
@@ -177,12 +185,20 @@ func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, owner
 			}
 		}
 
+		annotationsIdentical := true
+		for k, v := range latest.Annotations {
+			if annotations[k] != v {
+				annotationsIdentical = false
+				break
+			}
+		}
+
 		encodedData := make(map[string][]byte)
 		for k, v := range secretData {
 			encodedData[k] = []byte(v)
 		}
 
-		if reflect.DeepEqual(encodedData, latest.Data) && labelsIdentical {
+		if reflect.DeepEqual(encodedData, latest.Data) && labelsIdentical && annotationsIdentical {
 			// Do not create new versions if the content and the labels (except the version label) are identical
 			return SecretIdenticalError{secret: latest}
 		}
@@ -197,6 +213,11 @@ func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, owner
 	labels[LabelVersion] = strconv.Itoa(version)
 	labels[LabelSecretKind] = VersionSecretKind
 
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+	annotations[AnnotationSourceDescription] = sourceDescription
+
 	generatedSecretName, err := generateSecretName(secretName, version)
 	if err != nil {
 		return err
@@ -204,9 +225,10 @@ func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, owner
 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      generatedSecretName,
-			Namespace: namespace,
-			Labels:    labels,
+			Name:        generatedSecretName,
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         LabelAPIVersion,
@@ -216,9 +238,6 @@ func (p VersionedSecretImpl) Create(ctx context.Context, namespace string, owner
 					BlockOwnerDeletion: pointers.Bool(false),
 					Controller:         pointers.Bool(true),
 				},
-			},
-			Annotations: map[string]string{
-				AnnotationSourceDescription: sourceDescription,
 			},
 		},
 		StringData: secretData,
