@@ -372,7 +372,7 @@ name: fake-deployment-v4
 					map[string]string{
 						"manifest": `{"instance_groups":[{"instances":3,"name":"diego"},{"instances":2,"name":"mysql"}]}`,
 					},
-					nil,
+					map[string]string{},
 					secretLabels,
 					exampleSourceDescription,
 				)

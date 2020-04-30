@@ -172,7 +172,14 @@ func (p VersionedSecretImpl) Create(ctx context.Context,
 	annotations map[string]string,
 	labels map[string]string,
 	sourceDescription string) error {
+
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+	annotations[AnnotationSourceDescription] = sourceDescription
+
 	latest, err := p.Latest(ctx, namespace, secretName)
+
 	if err == nil {
 		labelsIdentical := true
 		for k, v := range latest.Labels {
@@ -212,11 +219,6 @@ func (p VersionedSecretImpl) Create(ctx context.Context,
 	version := currentVersion + 1
 	labels[LabelVersion] = strconv.Itoa(version)
 	labels[LabelSecretKind] = VersionSecretKind
-
-	if annotations == nil {
-		annotations = map[string]string{}
-	}
-	annotations[AnnotationSourceDescription] = sourceDescription
 
 	generatedSecretName, err := generateSecretName(secretName, version)
 	if err != nil {
