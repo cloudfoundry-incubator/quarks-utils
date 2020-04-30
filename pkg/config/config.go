@@ -43,11 +43,11 @@ func NewDefaultConfig(fs afero.Fs) *Config {
 }
 
 // NewConfig returns a new Config for a manager of controllers
-func NewConfig(namespace string, operatorNamespace string, ctxTimeOut int, useServiceRef bool, host string, port int32, fs afero.Fs, maxBoshDeploymentWorkers, maxQuarksJobWorkers, maxQuarksSecretWorkers, maxQuarksStatefulSetWorkers int) *Config {
+func NewConfig(namespace string, operatorNamespace string, ctxTimeOut int, useServiceRef bool, host string, port int32, fs afero.Fs, maxBoshDeploymentWorkers, maxQuarksJobWorkers, maxQuarksSecretWorkers, maxQuarksStatefulSetWorkers, meltdownDuration, meltdownRequeueAfter int) *Config {
 	return &Config{
 		CtxTimeOut:                  time.Duration(ctxTimeOut) * time.Second,
-		MeltdownDuration:            MeltdownDuration,
-		MeltdownRequeueAfter:        MeltdownRequeueAfter,
+		MeltdownDuration:            time.Duration(meltdownDuration) * time.Second,
+		MeltdownRequeueAfter:        time.Duration(meltdownRequeueAfter) * time.Second,
 		Namespace:                   namespace,
 		OperatorNamespace:           operatorNamespace,
 		WebhookUseServiceRef:        useServiceRef,
