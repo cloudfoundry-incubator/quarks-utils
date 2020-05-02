@@ -22,8 +22,11 @@ func NewTestLoggerWithPath(path string) (obs *observer.ObservedLogs, log *zap.Su
 	var memCore zapcore.Core
 	memCore, obs = observer.New(zapcore.DebugLevel)
 
+	config := zap.NewDevelopmentEncoderConfig()
+	config.EncodeLevel = zapcore.CapitalColorLevelEncoder
+
 	// A zap core that writes to a temp file
-	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+	consoleEncoder := zapcore.NewConsoleEncoder(config)
 	f, err := os.Create(path)
 	if err != nil {
 		panic(fmt.Sprintf("can't create log file: %s\n", err.Error()))
