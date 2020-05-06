@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+#set -o pipefail
+
+GO111MODULE=${GO111MODULE:-on} #Always on, so it works also inside GOPATH
+GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${GIT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null || echo ../code-generator)}
+cd "$GIT_ROOT"
+
+if [ -z ${CODEGEN_PKG+x} ] || [ ! -d "$CODEGEN_PKG" ]; then
+  go mod vendor
+  chmod +x $GIT_ROOT/vendor/k8s.io/code-generator/generate-groups.sh 
+fi
+
+# The groups and their versions in the format "groupA:v1,v2 groupB:v1 groupC:v2"
+GROUP_VERSIONS="${GROUP_VERSIONS:-boshdeployment:v1alpha1 quarksstatefulset:v1alpha1 quarkssecret:v1alpha1}"
+
+env GO111MODULE="$GO111MODULE" "${CODEGEN_PKG}/generate-groups.sh" "deepcopy,client,lister" \
+  code.cloudfoundry.org/quarks-operator/pkg/kube/client \
+  code.cloudfoundry.org/quarks-operator/pkg/kube/apis \
+  "${GROUP_VERSIONS}" \
+  --output-base "${GIT_ROOT}" \
+  --go-header-file "${GIT_ROOT}/gen/header.go.txt"
