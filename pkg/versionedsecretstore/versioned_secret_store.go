@@ -17,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"code.cloudfoundry.org/quarks-utils/pkg/ctxlog"
+	"code.cloudfoundry.org/quarks-utils/pkg/meltdown"
 	"code.cloudfoundry.org/quarks-utils/pkg/names"
 	"code.cloudfoundry.org/quarks-utils/pkg/pointers"
 )
@@ -28,7 +29,7 @@ var (
 	LabelVersion = fmt.Sprintf("%s/secret-version", names.GroupName)
 	// LabelAPIVersion is the lable for kube APIVersion
 	LabelAPIVersion = fmt.Sprintf("%s/v1alpha1", names.GroupName)
-	// AnnotationSourceDescription is the label key for source description
+	// AnnotationSourceDescription is the annotation key for source description
 	AnnotationSourceDescription = fmt.Sprintf("%s/source-description", names.GroupName)
 )
 
@@ -194,6 +195,9 @@ func (p VersionedSecretImpl) Create(ctx context.Context,
 
 		annotationsIdentical := true
 		for k, v := range latest.Annotations {
+			if k == meltdown.AnnotationLastReconcile {
+				continue
+			}
 			if annotations[k] != v {
 				annotationsIdentical = false
 				break
