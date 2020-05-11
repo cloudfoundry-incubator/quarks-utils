@@ -27,7 +27,6 @@ var _ = Describe("VersionedSecretStore", func() {
 		secretNamePrefix         string
 		exampleSourceDescription string
 		secretLabels             map[string]string
-		secretAnnotations        map[string]string
 		secretV1                 *corev1.Secret
 		secretV2                 *corev1.Secret
 		secretV4                 *corev1.Secret
@@ -44,9 +43,6 @@ var _ = Describe("VersionedSecretStore", func() {
 		secretLabels = map[string]string{
 			"deployment-name": secretNamePrefix,
 		}
-		secretAnnotations = map[string]string{
-			"test": "test",
-		}
 
 		secretV1 = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -57,7 +53,6 @@ var _ = Describe("VersionedSecretStore", func() {
 					LabelSecretKind: "versionedSecret",
 					LabelVersion:    "1",
 				},
-				Annotations: secretAnnotations,
 			},
 			Data: map[string][]byte{
 				"manifest": []byte(`instance_groups:
@@ -271,7 +266,6 @@ name: fake-deployment-v4
 					map[string]string{
 						"manifest": `{"instance_groups":[{"instances":3,"name":"diego"},{"instances":2,"name":"mysql"}]}`,
 					},
-					nil,
 					secretLabels,
 					exampleSourceDescription,
 				)
@@ -319,7 +313,6 @@ name: fake-deployment-v4
 					map[string]string{
 						"manifest": `{"instance_groups":[{"instances":3,"name":"diego"},{"instances":2,"name":"mysql"}]}`,
 					},
-					nil,
 					secretLabels,
 					exampleSourceDescription,
 				)
@@ -350,7 +343,6 @@ name: fake-deployment-v4
 					types.UID("d3d423b7-a57f-43b0-8305-79d484154e4f"),
 					secretNamePrefix,
 					data,
-					secretAnnotations,
 					secretV1.Labels,
 					exampleSourceDescription,
 				)
@@ -372,7 +364,6 @@ name: fake-deployment-v4
 					map[string]string{
 						"manifest": `{"instance_groups":[{"instances":3,"name":"diego"},{"instances":2,"name":"mysql"}]}`,
 					},
-					nil,
 					secretLabels,
 					exampleSourceDescription,
 				)
