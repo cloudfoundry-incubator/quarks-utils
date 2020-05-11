@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	cfakes "code.cloudfoundry.org/quarks-utils/pkg/fakes"
+	"code.cloudfoundry.org/quarks-utils/pkg/meltdown"
 	. "code.cloudfoundry.org/quarks-utils/pkg/versionedsecretstore"
 	"code.cloudfoundry.org/quarks-utils/testing"
 )
@@ -45,7 +46,8 @@ var _ = Describe("VersionedSecretStore", func() {
 			"deployment-name": secretNamePrefix,
 		}
 		secretAnnotations = map[string]string{
-			"test": "test",
+			"test":                           "test",
+			meltdown.AnnotationLastReconcile: "00:00:00",
 		}
 
 		secretV1 = &corev1.Secret{
