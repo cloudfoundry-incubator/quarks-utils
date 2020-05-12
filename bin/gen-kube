@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+GO111MODULE=${GO111MODULE:-on} #Always on, so it works also inside GOPATH
+GIT_ROOT=${GIT_ROOT:-$(git rev-parse --show-toplevel)}
+PROJECT=${PROJECT:-quarks-operator}
+
+# The groups and their versions in the format "groupA:v1,v2 groupB:v1 groupC:v2"
+GROUP_VERSIONS="${GROUP_VERSIONS:-boshdeployment:v1alpha1 quarksstatefulset:v1alpha1 quarkssecret:v1alpha1}"
+
+if [ -z ${GIT_ROOT+x} ] || [ ! -d "$GIT_ROOT" ]; then
+  echo "Git root not detected. Please set GIT_ROOT to point to the repository you want to update the version groups."
+  exit 1
+fi
+
+echo "Git root $GIT_ROOT ($PROJECT)"
+
+cd "$GIT_ROOT"
+
+if [ -z ${CODEGEN_PKG+x} ] || [ ! -d "$CODEGEN_PKG" ]; then
+  go mod vendor
+fi
+
+CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${GIT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null)}
+
+if [ -z ${CODEGEN_PKG+x} ]; then
+  echo "code-generator not found. Please run go mod vendor manually"
+  exit 1
+fi
+
+CODEGEN_VERSION=$(go list -u -m all | grep 'k8s.io/code-generator' | awk '{print $2}')
+
+echo
+echo "Using code-generator in $CODEGEN_PKG version $CODEGEN_VERSION"
+echo
+echo "WARNING: using codegen version referenced in quarks-utils go.mod"
+echo "  to pin to another version, set it in quarks-utils go.mod (and not in $PROJECT!)"
+echo
+echo "Generating group versions $GROUP_VERSIONS"
+
+[ ! -d "codegen" ] && mkdir codegen
+
+env GO111MODULE="$GO111MODULE" bash "${CODEGEN_PKG}/generate-groups.sh" "deepcopy,client,lister" \
+  code.cloudfoundry.org/${PROJECT}/pkg/kube/client \
+  code.cloudfoundry.org/${PROJECT}/pkg/kube/apis \
+  "${GROUP_VERSIONS}" \
+  --output-base "${GIT_ROOT}/codegen" \
+  --go-header-file "${GIT_ROOT}/gen/header.go.txt"
+
+cp -rf ${GIT_ROOT}/codegen/code.cloudfoundry.org/${PROJECT}/pkg ${GIT_ROOT}
+rm -rf ${GIT_ROOT}/codegen
