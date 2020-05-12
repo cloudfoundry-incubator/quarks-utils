@@ -20,9 +20,7 @@ echo "Git root $GIT_ROOT ($PROJECT)"
 
 cd "$GIT_ROOT"
 
-if [ -z ${CODEGEN_PKG+x} ] || [ ! -d "$CODEGEN_PKG" ]; then
-  go mod vendor
-fi
+go mod vendor
 
 CODEGEN_PKG=${CODEGEN_PKG:-$(cd "${GIT_ROOT}"; ls -d -1 ./vendor/k8s.io/code-generator 2>/dev/null)}
 
