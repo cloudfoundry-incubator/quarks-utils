@@ -1,12 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-GOVER_FILE=${GOVER_FILE:-gover-unit.coverprofile}
-
 # Run code coverage only in CI
 COV_ARG=""
 if [ ${COVERAGE+x} ]; then
-  COV_ARG="-cover -outputdir=./code-coverage  -coverprofile=${GOVER_FILE}"
+  COV_ARG="-cover -outputdir=./code-coverage"
 fi
 
 mkdir -p code-coverage
