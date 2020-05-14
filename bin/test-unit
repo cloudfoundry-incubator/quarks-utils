@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+GINKGO_ARGS="${GINKGO_ARGS:-pkg/...}"
 # Run code coverage only in CI
 COV_ARG=""
 if [ ${COVERAGE+x} ]; then
@@ -14,4 +15,5 @@ ginkgo -p -r \
   --trace \
   $COV_ARG \
   -skipPackage integration,e2e \
-  -race
+  -race \
+  $GINKGO_ARGS
