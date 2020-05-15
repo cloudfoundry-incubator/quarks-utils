@@ -1,10 +1,12 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-GOVER_FILE=${GOVER_FILE:-gover-unit.coverprofile}
-
+GINKGO_ARGS="${GINKGO_ARGS:-pkg/...}"
 # Run code coverage only in CI
-if [ -n "$COVERAGE" ]; then COV_ARG="-cover -outputdir=./code-coverage"; fi
+COV_ARG=""
+if [ ${COVERAGE+x} ]; then
+  COV_ARG="-cover -outputdir=./code-coverage"
+fi
 
 mkdir -p code-coverage
 ginkgo -p -r \
@@ -13,4 +15,5 @@ ginkgo -p -r \
   --trace \
   $COV_ARG \
   -skipPackage integration,e2e \
-  -race
+  -race \
+  $GINKGO_ARGS
