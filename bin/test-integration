@@ -6,11 +6,16 @@ GIT_ROOT="${GIT_ROOT:-$(git rev-parse --show-toplevel)}"
 . "${GIT_ROOT}/bin/include/testing"
 . "${GIT_ROOT}/bin/include/docker"
 
+if [ -e "${GIT_ROOT}/bin/include/dependencies" ]; then
+  . "${GIT_ROOT}/bin/include/dependencies"
+fi
+
 if [ -z ${TEST_NAMESPACE+x} ]; then
   TEST_NAMESPACE="test$(date +%s)"
   export TEST_NAMESPACE
 fi
 
+name="${INTEGRATION_SUITE:-}"
 : "${CF_OPERATOR_TESTING_TMP:=/tmp}"
 echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests.log"
 setup_testing_tmp
@@ -33,4 +38,4 @@ ginkgo ${FOCUS:+ --focus "$FOCUS"} \
   --slowSpecThreshold=50 \
   --flakeAttempts="$FLAKE_ATTEMPTS" \
   $COV_ARG \
-  integration/
+  integration/"$name"
