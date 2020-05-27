@@ -30,12 +30,18 @@ if [ ${COVERAGE+x} ]; then
   mkdir -p code-coverage
 fi
 
+DEBUG=${DEBUG:+--debug}
 NODES=${NODES:-3}
 FLAKE_ATTEMPTS=${FLAKE_ATTEMPTS:-3}
 ginkgo ${FOCUS:+ --focus "$FOCUS"} \
+  $DEBUG \
   --randomizeAllSpecs \
   --nodes="$NODES" \
   --slowSpecThreshold=50 \
   --flakeAttempts="$FLAKE_ATTEMPTS" \
   $COV_ARG \
   integration/"$name"
+
+if [ ${DEBUG+x} ]; then
+  find . -name ginkgo-node-\*.log -type f -print0 | xargs -0r tail -n 200
+fi
