@@ -2,6 +2,7 @@
 set -eu
 
 COVERALLS_TOKEN="${COVERALLS_TOKEN:-}"
+CONCOURSE="${CONCOURSE:-}"
 
 # add missing newlines to work around gover bug: https://github.com/sozorogami/gover/issues/9
 find ./code-coverage -type f | while read -r f; do echo >> "$f"; done
@@ -10,7 +11,12 @@ find ./code-coverage -type f | while read -r f; do echo >> "$f"; done
 gover ./code-coverage ./code-coverage/gover.coverprofile
 
 sed -i 's/\([0-9]\)\(code.cloudfoundry.org\)/\1\n\2/g' ./code-coverage/gover.coverprofile
+sed -i '/^$/d' ./code-coverage/gover.coverprofile
 
 if [[ -n "$COVERALLS_TOKEN" ]]; then
-    goveralls -coverprofile code-coverage/gover.coverprofile -service=travis-ci -repotoken "$COVERALLS_TOKEN"
+    if [[ -n "$CONCOURSE" ]]; then
+        goveralls -coverprofile gover.coverprofile -jobId "$BUILD_NUMBER" -service concourse -repotoken "$COVERALLS_TOKEN"
+    else
+        goveralls -coverprofile code-coverage/gover.coverprofile -service=travis-ci -repotoken "$COVERALLS_TOKEN"
+    fi
 fi
