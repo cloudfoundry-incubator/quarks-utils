@@ -17,9 +17,17 @@ fi
 
 name="${INTEGRATION_SUITE:-}"
 : "${CF_OPERATOR_TESTING_TMP:=/tmp}"
+mkdir -p "$CF_OPERATOR_TESTING_TMP"
 echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests.log"
-setup_testing_tmp
-trap cleanup_testing_tmp EXIT
+
+# ginkgo debug mode
+DEBUG=${DEBUG:+--debug}
+tail_ginkgo_logs() {
+  if [ ${DEBUG+x} ]; then
+    find . -name ginkgo-node-\*.log -type f -print0 | xargs -0r tail -n 200
+  fi
+}
+trap tail_ginkgo_logs EXIT
 
 GOVER_FILE=${GOVER_FILE:-gover-integration.coverprofile}
 
@@ -30,18 +38,12 @@ if [ ${COVERAGE+x} ]; then
   mkdir -p code-coverage
 fi
 
-DEBUG=${DEBUG:+--debug}
 NODES=${NODES:-3}
 FLAKE_ATTEMPTS=${FLAKE_ATTEMPTS:-3}
-ginkgo ${FOCUS:+ --focus "$FOCUS"} \
-  $DEBUG \
+ginkgo ${FOCUS:+ --focus "$FOCUS"} $DEBUG \
   --randomizeAllSpecs \
   --nodes="$NODES" \
   --slowSpecThreshold=50 \
   --flakeAttempts="$FLAKE_ATTEMPTS" \
   $COV_ARG \
   integration/"$name"
-
-if [ ${DEBUG+x} ]; then
-  find . -name ginkgo-node-\*.log -type f -print0 | xargs -0r tail -n 200
-fi
