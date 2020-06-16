@@ -17,9 +17,8 @@ fi
 
 name="${INTEGRATION_SUITE:-}"
 : "${CF_OPERATOR_TESTING_TMP:=/tmp}"
+mkdir -p "$CF_OPERATOR_TESTING_TMP"
 echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests.log"
-setup_testing_tmp
-trap cleanup_testing_tmp EXIT
 
 GOVER_FILE=${GOVER_FILE:-gover-integration.coverprofile}
 
