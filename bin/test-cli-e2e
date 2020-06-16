@@ -7,9 +7,8 @@ GIT_ROOT="${GIT_ROOT:-$(git rev-parse --show-toplevel)}"
 . "${GIT_ROOT}/bin/include/testing"
 
 : "${CF_OPERATOR_TESTING_TMP:=/tmp}"
+mkdir -p "$CF_OPERATOR_TESTING_TMP"
 echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests.log"
-setup_testing_tmp
-trap cleanup_testing_tmp EXIT
 
 if [ -z ${TEST_NAMESPACE+x} ]; then
   TEST_NAMESPACE="test$(date +%s)"
