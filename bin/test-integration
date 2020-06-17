@@ -22,12 +22,6 @@ echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests.log"
 
 # ginkgo debug mode
 DEBUG=${DEBUG:+--debug}
-tail_ginkgo_logs() {
-  if [ ${DEBUG+x} ]; then
-    find . -name ginkgo-node-\*.log -type f -print0 | xargs -0r tail -n 200
-  fi
-}
-trap tail_ginkgo_logs EXIT
 
 GOVER_FILE=${GOVER_FILE:-gover-integration.coverprofile}
 
