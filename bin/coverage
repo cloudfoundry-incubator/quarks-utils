@@ -15,7 +15,7 @@ sed -i '/^$/d' ./code-coverage/gover.coverprofile
 
 if [[ -n "$COVERALLS_TOKEN" ]]; then
     if [[ -n "$CONCOURSE" ]]; then
-        goveralls -coverprofile gover.coverprofile -jobId "$BUILD_NUMBER" -service concourse -repotoken "$COVERALLS_TOKEN"
+        goveralls -coverprofile code-coverage/gover.coverprofile -jobId "$BUILD_NUMBER" -service concourse -repotoken "$COVERALLS_TOKEN"
     else
         goveralls -coverprofile code-coverage/gover.coverprofile -service=travis-ci -repotoken "$COVERALLS_TOKEN"
     fi
