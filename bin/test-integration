@@ -23,7 +23,11 @@ echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests.log"
 # ginkgo debug mode
 DEBUG=${DEBUG:+--debug}
 
-GOVER_FILE=${GOVER_FILE:-gover-integration.coverprofile}
+if [ "$name" = "storage" ]; then
+  GOVER_FILE=${GOVER_FILE:-gover-integration-storage.coverprofile}
+else
+  GOVER_FILE=${GOVER_FILE:-gover-integration.coverprofile}
+fi
 
 # Run code coverage only in CI
 COV_ARG=""
