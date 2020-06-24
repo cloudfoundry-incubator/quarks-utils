@@ -130,6 +130,19 @@ func (m *Machine) CreateService(namespace string, service corev1.Service) (TearD
 	}, err
 }
 
+// UpdateService updates a service and returns a function to delete it
+func (m *Machine) UpdateService(namespace string, svc corev1.Service) (*corev1.Service, TearDownFunc, error) {
+	client := m.Clientset.CoreV1().Services(namespace)
+	s, err := client.Update(context.Background(), &svc, metav1.UpdateOptions{})
+	return s, func() error {
+		err := client.Delete(context.Background(), svc.GetName(), metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		return nil
+	}, err
+}
+
 // WaitForPortReachable blocks until the endpoint is reachable
 func (m *Machine) WaitForPortReachable(protocol, uri string) error {
 	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
