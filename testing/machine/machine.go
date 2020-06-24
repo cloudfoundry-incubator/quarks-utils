@@ -151,6 +151,19 @@ func (m *Machine) WaitForPortReachable(protocol, uri string) error {
 	})
 }
 
+// CreateEndpoints creates an Endpoint in the given namespace
+func (m *Machine) CreateEndpoints(namespace string, ep corev1.Endpoints) (TearDownFunc, error) {
+	client := m.Clientset.CoreV1().Endpoints(namespace)
+	_, err := client.Create(context.Background(), &ep, metav1.CreateOptions{})
+	return func() error {
+		err := client.Delete(context.Background(), ep.GetName(), metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		return nil
+	}, err
+}
+
 // GetEndpoints gets target Endpoints
 func (m *Machine) GetEndpoints(namespace string, name string) (*corev1.Endpoints, error) {
 	ep, err := m.Clientset.CoreV1().Endpoints(namespace).Get(context.Background(), name, metav1.GetOptions{})
@@ -159,6 +172,19 @@ func (m *Machine) GetEndpoints(namespace string, name string) (*corev1.Endpoints
 	}
 
 	return ep, nil
+}
+
+// UpdateEndpoints updates an endpoint and returns a function to delete it
+func (m *Machine) UpdateEndpoints(namespace string, ep corev1.Endpoints) (*corev1.Endpoints, TearDownFunc, error) {
+	client := m.Clientset.CoreV1().Endpoints(namespace)
+	s, err := client.Update(context.Background(), &ep, metav1.UpdateOptions{})
+	return s, func() error {
+		err := client.Delete(context.Background(), ep.GetName(), metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		return nil
+	}, err
 }
 
 // WaitForSubsetsExist blocks until the specified endpoints' subsets exist
