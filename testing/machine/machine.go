@@ -130,12 +130,38 @@ func (m *Machine) CreateService(namespace string, service corev1.Service) (TearD
 	}, err
 }
 
+// UpdateService updates a service and returns a function to delete it
+func (m *Machine) UpdateService(namespace string, svc corev1.Service) (*corev1.Service, TearDownFunc, error) {
+	client := m.Clientset.CoreV1().Services(namespace)
+	s, err := client.Update(context.Background(), &svc, metav1.UpdateOptions{})
+	return s, func() error {
+		err := client.Delete(context.Background(), svc.GetName(), metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		return nil
+	}, err
+}
+
 // WaitForPortReachable blocks until the endpoint is reachable
 func (m *Machine) WaitForPortReachable(protocol, uri string) error {
 	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		_, err := net.Dial(protocol, uri)
 		return err == nil, nil
 	})
+}
+
+// CreateEndpoints creates an Endpoint in the given namespace
+func (m *Machine) CreateEndpoints(namespace string, ep corev1.Endpoints) (TearDownFunc, error) {
+	client := m.Clientset.CoreV1().Endpoints(namespace)
+	_, err := client.Create(context.Background(), &ep, metav1.CreateOptions{})
+	return func() error {
+		err := client.Delete(context.Background(), ep.GetName(), metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		return nil
+	}, err
 }
 
 // GetEndpoints gets target Endpoints
@@ -146,6 +172,19 @@ func (m *Machine) GetEndpoints(namespace string, name string) (*corev1.Endpoints
 	}
 
 	return ep, nil
+}
+
+// UpdateEndpoints updates an endpoint and returns a function to delete it
+func (m *Machine) UpdateEndpoints(namespace string, ep corev1.Endpoints) (*corev1.Endpoints, TearDownFunc, error) {
+	client := m.Clientset.CoreV1().Endpoints(namespace)
+	s, err := client.Update(context.Background(), &ep, metav1.UpdateOptions{})
+	return s, func() error {
+		err := client.Delete(context.Background(), ep.GetName(), metav1.DeleteOptions{})
+		if err != nil && !apierrors.IsNotFound(err) {
+			return err
+		}
+		return nil
+	}, err
 }
 
 // WaitForSubsetsExist blocks until the specified endpoints' subsets exist

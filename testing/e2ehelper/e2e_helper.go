@@ -53,22 +53,7 @@ func CreateNamespace() (string, string, TearDownFunc, error) {
 	fmt.Printf("Using test namespace: %s, %s\n", operatorNamespace, namespace)
 
 	teardownFunc := func() error {
-		var messages string
-		err = testing.DeleteNamespace(namespace)
-		if err != nil {
-			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
-		}
-
-		err = testing.DeleteNamespace(operatorNamespace)
-		if err != nil {
-			messages = fmt.Sprintf("%v%v\n", messages, err.Error())
-		}
-
-		if messages != "" {
-			fmt.Printf("Failures while cleaning up test environment namespaces:\n %v", messages)
-			return errors.New(messages)
-		}
-		return nil
+		return testing.DeleteNamespace(operatorNamespace)
 	}
 
 	return namespace, operatorNamespace, teardownFunc, nil
