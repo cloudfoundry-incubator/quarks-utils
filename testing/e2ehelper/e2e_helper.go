@@ -76,6 +76,25 @@ func createTestNamespace() (string, error) {
 	return namespace, nil
 }
 
+// CreateMonitoredNamespace creates a namespace with the monitored label
+func CreateMonitoredNamespace(namespace string, id string) (TearDownFunc, error) {
+	err := testing.CreateNamespace(namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	err = testing.PatchNamespace(namespace,
+		`[{"op": "add", "path": "/metadata/labels", "value": {"quarks.cloudfoundry.org/monitored": "`+id+`"}}]`)
+	if err != nil {
+		return nil, err
+	}
+
+	f := func() error {
+		return testing.DeleteNamespace(namespace)
+	}
+	return f, nil
+}
+
 // InstallChart installs the helm chart into the operator namespace
 func InstallChart(chartPath string, operatorNamespace string, args ...string) (TearDownFunc, error) {
 	err := testing.RunHelmBinaryWithCustomErr("version")
