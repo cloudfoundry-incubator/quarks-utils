@@ -323,28 +323,27 @@ func CreateSecretFromLiteral(namespace string, secretName string, literalValues 
 // DeleteSecret deletes the namespace using kubectl command
 func DeleteSecret(namespace string, secretName string) error {
 	_, err := runBinary(kubeCtlCmd, "--namespace", namespace, "delete", "secret", secretName, "--ignore-not-found")
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Apply updates the resource using kubectl command
 func Apply(namespace string, yamlFilePath string) error {
 	_, err := runBinary(kubeCtlCmd, "--namespace", namespace, "apply", "-f", yamlFilePath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
+}
+
+// PatchNamespace patche the namespace resource using kubectl command
+func PatchNamespace(name string, patch string) error {
+	_, err := runBinary(kubeCtlCmd,
+		"patch", "namespace", name,
+		"--type=json", "-p", patch)
+	return err
 }
 
 // Delete creates the resource using kubectl command
 func Delete(namespace string, yamlFilePath string) error {
 	_, err := runBinary(kubeCtlCmd, "--namespace", namespace, "delete", "-f", yamlFilePath)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // DeleteResource deletes the resource using kubectl command
