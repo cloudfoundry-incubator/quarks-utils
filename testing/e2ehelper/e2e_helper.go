@@ -76,6 +76,48 @@ func createTestNamespace() (string, error) {
 	return namespace, nil
 }
 
+// CreateMonitoredNamespaceFromExistingRole creates a namespace with the monitored label
+func CreateMonitoredNamespaceFromExistingRole(clusterRole string) (string, []TearDownFunc, error) {
+	prefix, found := os.LookupEnv("TEST_NAMESPACE")
+	if !found {
+		prefix = "default"
+	}
+	newNamespace := prefix + "-multins-" + strconv.Itoa(config.GinkgoConfig.ParallelNode) + "-" + strconv.Itoa(int(nsIndex))
+	roleName := prefix + "-multins-role-" + strconv.Itoa(config.GinkgoConfig.ParallelNode) + "-" + strconv.Itoa(int(nsIndex))
+	nsIndex++
+
+	err := testing.CreateNamespace(newNamespace)
+	if err != nil {
+		return "", nil, err
+	}
+
+	kubectl := testing.NewKubectl()
+	err = kubectl.CreateServiceAccount(newNamespace, newNamespace)
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = kubectl.CreateRoleBinding(newNamespace, clusterRole, newNamespace+":"+newNamespace, roleName)
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = testing.PatchNamespace(newNamespace,
+		`[{"op": "add", "path": "/metadata/labels", "value": {"quarks.cloudfoundry.org/qjob-service-account": "`+newNamespace+`", "quarks.cloudfoundry.org/monitored": "`+clusterRole+`"}}]`)
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	f := []TearDownFunc{
+		func() error { return kubectl.DeleteRoleBinding(newNamespace, roleName) },
+		func() error { return kubectl.DeleteServiceAccount(newNamespace, newNamespace) },
+		func() error { return testing.DeleteNamespace(newNamespace) },
+	}
+
+	return newNamespace, f, nil
+}
+
 // CreateMonitoredNamespace creates a namespace with the monitored label
 func CreateMonitoredNamespace(namespace string, id string) (TearDownFunc, error) {
 	err := testing.CreateNamespace(namespace)
