@@ -275,6 +275,50 @@ func (k *Kubectl) checkPodTerminateLabelFilter(namespace string, labelName strin
 	return false, nil
 }
 
+// CreateRoleBinding Create a new rolebinding in a namespace from a cluster role
+func (k *Kubectl) CreateRoleBinding(namespace string, clusterrole, serviceaccount, role string) error {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "create", "rolebinding", "--clusterrole", clusterrole, "--serviceaccount", serviceaccount, role)
+	if err != nil {
+		return errors.Wrapf(err, "Kubectl create rolebinding failed with role %s failed. %s", clusterrole, string(out))
+
+	}
+
+	return nil
+}
+
+// CreateServiceAccount Create a new serviceaccount in a namespace
+func (k *Kubectl) CreateServiceAccount(namespace string, serviceaccount string) error {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "create", "serviceaccount", serviceaccount)
+	if err != nil {
+		return errors.Wrapf(err, "Kubectl create serviceaccount with %s failed. %s", serviceaccount, string(out))
+
+	}
+
+	return nil
+}
+
+// DeleteRoleBinding Deletes a rolebinding in a namespace
+func (k *Kubectl) DeleteRoleBinding(namespace string, role string) error {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "delete", "rolebinding", role)
+	if err != nil {
+		return errors.Wrapf(err, "Kubectl delete rolebinding failed with role %s failed. %s", role, string(out))
+
+	}
+
+	return nil
+}
+
+// DeleteServiceAccount Deletes a serviceaccount in a namespace
+func (k *Kubectl) DeleteServiceAccount(namespace string, serviceaccount string) error {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "delete", "serviceaccount", serviceaccount)
+	if err != nil {
+		return errors.Wrapf(err, "Kubectl delete serviceaccount with %s failed. %s", serviceaccount, string(out))
+
+	}
+
+	return nil
+}
+
 // CreateNamespace create the namespace using kubectl command
 func CreateNamespace(name string) error {
 	_, err := runBinary(kubeCtlCmd, "create", "namespace", name)
