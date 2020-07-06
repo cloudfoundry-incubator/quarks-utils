@@ -2,6 +2,7 @@ package machine
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -60,6 +61,13 @@ func (m *Machine) GetSecret(namespace string, name string) (*corev1.Secret, erro
 func (m *Machine) WaitForSecret(namespace string, name string) error {
 	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
 		return m.SecretExists(namespace, name)
+	})
+}
+
+// CustomWaitForSecret blocks until the secret is available. It fails after the custom timeout.
+func (m *Machine) CustomWaitForSecret(namespace string, secretName string, pollTimeout time.Duration) error {
+	return wait.PollImmediate(m.PollInterval, pollTimeout, func() (bool, error) {
+		return m.SecretExists(namespace, secretName)
 	})
 }
 
