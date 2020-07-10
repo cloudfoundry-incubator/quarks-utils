@@ -19,7 +19,7 @@ func WaitForPort(host, port string, timeOut time.Duration) error {
 			defer wg.Done()
 			for {
 				t := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
-				client := &http.Client{Transport: t}
+				client := &http.Client{Transport: t, Timeout: 10 * time.Second}
 				r, err := client.Get(fmt.Sprintf("https://%s/readyz", address))
 				if err == nil && r.StatusCode == 200 {
 					return
