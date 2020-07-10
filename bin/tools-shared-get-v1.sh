@@ -5,7 +5,7 @@ get_quarks_utils_bin() {
   cd $GIT_ROOT
 
   # Gets the quarks-utils version from go.mod
-  quarks_utils_version=$(grep code.cloudfoundry.org/quarks-utils go.mod | awk '{print $2}')
+  quarks_utils_version=$(grep code.cloudfoundry.org/quarks-utils go.mod | awk '{print $2}' | head -1)
   quarks_utils_version=$(echo $quarks_utils_version | sed 's/.*-//g') # Keep only the commit
   if [ "$quarks_utils_version" = "utils" ]; then
     echo "failed to parse commit from go.mod"
