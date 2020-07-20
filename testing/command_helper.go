@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
 	"runtime/debug"
 	"strings"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v2"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -468,6 +471,96 @@ func (k *Kubectl) WaitForData(namespace string, resourceName string, name string
 		}
 		return false, nil
 	})
+}
+
+func writeTemporaryYAML(v interface{}) (string, error) {
+	tmpfile, err := ioutil.TempFile(os.TempDir(), "yaml-")
+	if err != nil {
+		return "", err
+	}
+
+	content, err := yaml.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	if _, err := tmpfile.Write(content); err != nil {
+		return "", err
+	}
+	if err := tmpfile.Close(); err != nil {
+		return "", err
+	}
+
+	return tmpfile.Name(), nil
+}
+
+// ApplyYAML applies arbitrary interfaces with kubectl.
+func (k *Kubectl) ApplyYAML(namespace string, name string, v interface{}) error {
+	path, err := writeTemporaryYAML(v)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(path)
+	_, err = runBinary(kubeCtlCmd, "--namespace", namespace, "apply", "-f", path)
+	if err != nil {
+		return errors.Wrapf(err, "Applying resource %s. %s", name, v)
+	}
+
+	return nil
+}
+
+// ConfigMap defines a kube ConfigMap
+type ConfigMap struct {
+	APIVersion string `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string `json:"kind" yaml:"kind"`
+	Metadata   struct {
+		Name string `json:"name" yaml:"name"`
+	} `json:"metadata" yaml:"metadata"`
+	Data map[string]string `json:"data" yaml:"data"`
+}
+
+// GetConfigMap blocks until the specified data is available. It fails after the timeout.
+func (k *Kubectl) GetConfigMap(namespace string, name string) (ConfigMap, error) {
+	var cfgmap ConfigMap
+	out, err := GetData(namespace, "configmap", name, "json")
+	if err != nil {
+		return cfgmap, err
+	}
+
+	err = json.Unmarshal(out, &cfgmap)
+	if err != nil {
+		return cfgmap, err
+	}
+
+	return cfgmap, nil
+}
+
+// BDPL defines a bdpl
+type BDPL struct {
+	APIVersion string `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string `json:"kind" yaml:"kind"`
+	Metadata   struct {
+		Name string `json:"name" yaml:"name"`
+	} `json:"metadata" yaml:"metadata"`
+	Spec struct {
+		Manifest map[string]string   `json:"manifest" yaml:"manifest"`
+		Ops      []map[string]string `json:"ops" yaml:"ops"`
+	} `json:"spec" yaml:"spec"`
+}
+
+// GetBoshDeployment returns a BDPL
+func (k *Kubectl) GetBoshDeployment(namespace string, name string) (BDPL, error) {
+	var bdpl BDPL
+	result, err := GetData(namespace, "boshdeployment", name, "json")
+	if err != nil {
+		return bdpl, err
+	}
+
+	d := json.NewDecoder(bytes.NewReader(result))
+	if err := d.Decode(&bdpl); err != nil {
+		return bdpl, err
+	}
+
+	return bdpl, nil
 }
 
 // GetData fetches the specified output by the given templatePath
