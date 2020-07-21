@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	cmdHelper "code.cloudfoundry.org/quarks-utils/testing"
 )
 
 // GetNamespaceName returns a numbered namespace
@@ -40,4 +42,20 @@ func DumpENV(namespace string) {
 		fmt.Println("Failed to run the `dump_env.sh` script", err)
 	}
 	fmt.Println(string(out))
+}
+
+// NukeNamespaces uses the kubectl command to remove remaining test namespaces. Used in AfterSuite.
+func NukeNamespaces(namespacesToNuke []string) {
+	for _, namespace := range namespacesToNuke {
+		err := cmdHelper.DeleteNamespace(namespace)
+		if err != nil && !NamespaceDeletionInProgress(err) {
+			fmt.Printf("WARNING: failed to delete namespace %s: %v\n", namespace, err)
+		}
+	}
+}
+
+// NamespaceDeletionInProgress returns true if the error indicates deletion will happen
+// eventually
+func NamespaceDeletionInProgress(err error) bool {
+	return strings.Contains(err.Error(), "namespace will automatically be purged")
 }

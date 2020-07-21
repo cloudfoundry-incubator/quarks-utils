@@ -15,11 +15,14 @@ import (
 	"code.cloudfoundry.org/quarks-utils/pkg/config"
 )
 
+// GinkgoTeardownFunc is used to clean up the test environment
+type GinkgoTeardownFunc func(wasFailure bool)
+
 // Environment starts our operator and handles interaction with the k8s
 // cluster used in the tests
 type Environment struct {
 	ID           int
-	Teardown     func(wasFailure bool)
+	Teardown     GinkgoTeardownFunc
 	KubeConfig   *rest.Config
 	Log          *zap.SugaredLogger
 	Config       *config.Config
