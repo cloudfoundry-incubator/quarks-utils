@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	cmdHelper "code.cloudfoundry.org/quarks-utils/testing"
+	"code.cloudfoundry.org/quarks-utils/testing/machine"
+	"github.com/pkg/errors"
 )
 
 // GetNamespaceName returns a numbered namespace
@@ -19,6 +21,16 @@ func GetNamespaceName(namespaceCounter int) string {
 		ns = "default"
 	}
 	return ns + "-" + strconv.Itoa(int(namespaceCounter))
+}
+
+// SetupNamespace  creates a new labeled namespace and sets the teardown func in the environment
+func SetupNamespace(e *Environment, m machine.Machine, labels map[string]string) error {
+	nsTeardown, err := m.CreateLabeledNamespace(e.Namespace, labels)
+	if err != nil {
+		return errors.Wrapf(err, "Integration setup failed. Creating namespace %s failed", e.Namespace)
+	}
+	e.TeardownFunc = nsTeardown
+	return nil
 }
 
 // DumpENV executes testing/dump_env.sh to write k8s resources to files
