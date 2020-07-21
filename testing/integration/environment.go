@@ -1,34 +1,68 @@
 package environment
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" //from https://github.com/kubernetes/client-go/issues/345
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"code.cloudfoundry.org/quarks-utils/pkg/config"
+	"code.cloudfoundry.org/quarks-utils/testing/machine"
 )
-
-// GinkgoTeardownFunc is used to clean up the test environment
-type GinkgoTeardownFunc func(wasFailure bool)
 
 // Environment starts our operator and handles interaction with the k8s
 // cluster used in the tests
 type Environment struct {
 	ID           int
-	Teardown     GinkgoTeardownFunc
 	KubeConfig   *rest.Config
 	Log          *zap.SugaredLogger
+	TeardownFunc machine.TearDownFunc
 	Config       *config.Config
 	ObservedLogs *observer.ObservedLogs
 	Namespace    string
 	Stop         chan struct{}
+}
+
+// StartManager is used to clean up the test environment
+func (e *Environment) StartManager(mgr manager.Manager) {
+	e.Stop = make(chan struct{})
+	go func() {
+		defer ginkgo.GinkgoRecover()
+		gomega.Expect(mgr.Start(e.Stop)).NotTo(gomega.HaveOccurred())
+	}()
+}
+
+// Teardown is used to clean up the test environment
+func (e *Environment) Teardown(wasFailure bool) {
+	if wasFailure {
+		DumpENV(e.Namespace)
+	}
+
+	if e.Stop != nil {
+		close(e.Stop)
+	}
+
+	gexec.Kill()
+
+	if e.TeardownFunc == nil {
+		return
+	}
+	err := e.TeardownFunc()
+	if err != nil && !NamespaceDeletionInProgress(err) {
+		fmt.Printf("WARNING: failed to delete namespace %s: %v\n", e.Namespace, err)
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+	}
 }
 
 // KubeConfig returns a kube config for this environment
