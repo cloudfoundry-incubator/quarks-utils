@@ -2,6 +2,7 @@ package e2ehelper
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
@@ -163,6 +164,107 @@ func InstallChart(chartPath string, operatorNamespace string, args ...string) (T
 
 	return func() error {
 		err = testing.RunHelmBinaryWithCustomErr("delete", "-n", operatorNamespace, fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}, nil
+}
+
+// UpgradeChart upgrades the helm chart into the operator namespace
+func UpgradeChart(chartPath string, operatorNamespace string, args ...string) (TearDownFunc, error) {
+	err := testing.RunHelmBinaryWithCustomErr("version")
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s Helm version command failed", e2eFailedMessage)
+	}
+
+	cmd := append([]string{
+		"upgrade",
+		fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace),
+		chartPath,
+		"--namespace", operatorNamespace,
+		"--timeout", fmt.Sprintf("%ss", installTimeOutInSecs),
+		"--wait",
+	}, args...)
+
+	err = testing.RunHelmBinaryWithCustomErr(cmd...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s Helm install command failed.", e2eFailedMessage)
+	}
+
+	// Add sleep for workaround for CI timeouts
+	time.Sleep(10 * time.Second)
+
+	return func() error {
+		err = testing.RunHelmBinaryWithCustomErr("delete", "-n", operatorNamespace, fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}, nil
+}
+
+// GetChart gets the helm chart into the specified directory
+// e.g. helm pull quarks/cf-operator --untar --untardir test
+func GetChart(chart string) (string, TearDownFunc, error) {
+	tempDir, err := ioutil.TempDir(os.TempDir(), "helm-")
+	if err != nil {
+		return "", nil, errors.Wrapf(err, "%s unable to create temporary folder", e2eFailedMessage)
+	}
+
+	err = testing.RunHelmBinaryWithCustomErr("version")
+	if err != nil {
+		return "", nil, errors.Wrapf(err, "%s Helm version command failed", e2eFailedMessage)
+	}
+
+	err = testing.RunHelmBinaryWithCustomErr(
+		"pull",
+		chart,
+		"--untardir", tempDir,
+		"--untar",
+	)
+	if err != nil {
+		return "", nil, errors.Wrapf(err, "%s Helm install command failed.", e2eFailedMessage)
+	}
+
+	// Add sleep for workaround for CI timeouts
+	time.Sleep(1 * time.Second)
+
+	return tempDir, func() error {
+		err := os.RemoveAll(tempDir)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}, nil
+}
+
+// AddHelmRepo adds a repo to helm
+// e.g. helm repo add quarks https://cloudfoundry-incubator.github.io/quarks-helm/
+func AddHelmRepo(repo, url string) (TearDownFunc, error) {
+
+	err := testing.RunHelmBinaryWithCustomErr("version")
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s Helm version command failed", e2eFailedMessage)
+	}
+
+	err = testing.RunHelmBinaryWithCustomErr(
+		"repo",
+		"add",
+		repo, url,
+	)
+	if err != nil {
+		return nil, errors.Wrapf(err, "%s Helm install command failed.", e2eFailedMessage)
+	}
+
+	// Add sleep for workaround for CI timeouts
+	time.Sleep(1 * time.Second)
+
+	return func() error {
+		err = testing.RunHelmBinaryWithCustomErr("repo", "remove", repo)
 		if err != nil {
 			return err
 		}
