@@ -508,6 +508,16 @@ func (k *Kubectl) ApplyYAML(namespace string, name string, v interface{}) error 
 	return nil
 }
 
+// Delete calls kubectl with the given arguments
+func (k *Kubectl) Delete(args ...string) error {
+
+	if _, err := runBinary(kubeCtlCmd, append([]string{"delete"}, args...)...); err != nil {
+		return errors.Wrapf(err, "Deleting resource: %s", args)
+	}
+
+	return nil
+}
+
 // ConfigMap defines a kube ConfigMap
 type ConfigMap struct {
 	APIVersion string `json:"apiVersion" yaml:"apiVersion"`
