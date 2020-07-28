@@ -139,6 +139,18 @@ func (k *Kubectl) ServiceExists(namespace string, serviceName string) (bool, err
 	return false, nil
 }
 
+// Exists returns true if the resource by that name exists
+func (k *Kubectl) Exists(namespace, resource, name string) (bool, error) {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", resource, name)
+	if err != nil {
+		return false, errors.Wrapf(err, "Getting %s %s failed. %s", resource, name, string(out))
+	}
+	if strings.Contains(string(out), name) {
+		return true, nil
+	}
+	return false, nil
+}
+
 // Service returns the service if serviceName exists.
 func (k *Kubectl) Service(namespace string, serviceName string) (v1.Service, error) {
 	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", "service", serviceName, "-o", "json")
@@ -434,6 +446,20 @@ func RestartOperator(namespace string) error {
 
 	_, err := runBinary(kubeCtlCmd, "patch", deploymentName,
 		"--namespace", namespace, "--patch", "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"dummy-date\":\"`date +'%s'`\"}}}}}")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// TriggerQJob triggers a qjob
+func TriggerQJob(namespace, qjob string) error {
+	qjobs := fmt.Sprintf("qjobs/%s", qjob)
+	fmt.Println("Triggering '" + qjobs + "'...")
+
+	_, err := runBinary(kubeCtlCmd, "patch", qjobs,
+		"--namespace", namespace, "--type", "merge", "--patch", `{"spec":{"trigger":{"strategy":"now"}}}`)
 	if err != nil {
 		return err
 	}
