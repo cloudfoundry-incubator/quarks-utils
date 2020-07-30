@@ -139,6 +139,18 @@ func (k *Kubectl) ServiceExists(namespace string, serviceName string) (bool, err
 	return false, nil
 }
 
+// Exists returns true if the resource by that name exists
+func (k *Kubectl) Exists(namespace, resource, name string) (bool, error) {
+	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", resource, name)
+	if err != nil {
+		return false, errors.Wrapf(err, "Getting %s %s failed. %s", resource, name, string(out))
+	}
+	if strings.Contains(string(out), name) {
+		return true, nil
+	}
+	return false, nil
+}
+
 // Service returns the service if serviceName exists.
 func (k *Kubectl) Service(namespace string, serviceName string) (v1.Service, error) {
 	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", "service", serviceName, "-o", "json")
@@ -441,6 +453,20 @@ func RestartOperator(namespace string) error {
 	return nil
 }
 
+// TriggerQJob triggers a qjob
+func TriggerQJob(namespace, qjob string) error {
+	qjobs := fmt.Sprintf("qjobs/%s", qjob)
+	fmt.Println("Triggering '" + qjobs + "'...")
+
+	_, err := runBinary(kubeCtlCmd, "patch", qjobs,
+		"--namespace", namespace, "--type", "merge", "--patch", `{"spec":{"trigger":{"strategy":"now"}}}`)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // RunCommandWithOutput runs the command specified in the container and returns output
 func RunCommandWithOutput(namespace string, podName string, commandInPod string) (string, error) {
 	kubectlCommand := "kubectl --namespace " + namespace + " exec -it " + podName + " " + commandInPod
@@ -503,6 +529,16 @@ func (k *Kubectl) ApplyYAML(namespace string, name string, v interface{}) error 
 	_, err = runBinary(kubeCtlCmd, "--namespace", namespace, "apply", "-f", path)
 	if err != nil {
 		return errors.Wrapf(err, "Applying resource %s. %s", name, v)
+	}
+
+	return nil
+}
+
+// Delete calls kubectl with the given arguments
+func (k *Kubectl) Delete(args ...string) error {
+
+	if _, err := runBinary(kubeCtlCmd, append([]string{"delete"}, args...)...); err != nil {
+		return errors.Wrapf(err, "Deleting resource: %s", args)
 	}
 
 	return nil
