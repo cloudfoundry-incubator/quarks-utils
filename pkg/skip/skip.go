@@ -20,9 +20,9 @@ type Object interface {
 	metav1.Object
 }
 
-// SkipReconciles returns true if the object is stale, and shouldn't be enqueued for reconciliation
+// Reconciles returns true if the object is stale, and shouldn't be enqueued for reconciliation
 // The object can be a ConfigMap or a Secret
-func SkipReconciles(ctx context.Context, client crc.Client, object Object) bool {
+func Reconciles(ctx context.Context, client crc.Client, object Object) bool {
 	var newResourceVersion string
 
 	switch object := object.(type) {
