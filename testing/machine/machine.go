@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,15 +38,23 @@ type ChanResult struct {
 
 const (
 	// DefaultTimeout used to wait for resources
-	DefaultTimeout = 300 * time.Second
+	DefaultTimeout = 30 * time.Second
 	// DefaultInterval for polling
 	DefaultInterval = 500 * time.Millisecond
 )
 
 // NewMachine returns a new machine which creates k8s resources
 func NewMachine() Machine {
+	timeout := DefaultTimeout
+	t, found := os.LookupEnv("MACHINE_TIMEOUT")
+	if found {
+		i, err := strconv.Atoi(t)
+		if err == nil {
+			timeout = time.Duration(i) * time.Second
+		}
+	}
 	return Machine{
-		PollTimeout:  DefaultTimeout,
+		PollTimeout:  timeout,
 		PollInterval: DefaultInterval,
 	}
 }
