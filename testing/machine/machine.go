@@ -38,7 +38,7 @@ type ChanResult struct {
 
 const (
 	// DefaultTimeout used to wait for resources
-	DefaultTimeout = 30 * time.Second
+	DefaultTimeout = 300 * time.Second
 	// DefaultInterval for polling
 	DefaultInterval = 500 * time.Millisecond
 )
