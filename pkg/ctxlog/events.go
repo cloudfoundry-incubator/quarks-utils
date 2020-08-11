@@ -112,7 +112,11 @@ func (ev Event) debugJSON(ctx context.Context, objectInfo interface{}) {
 
 	// treat JSON data as a string map and extract message
 	var result map[string]string
-	json.Unmarshal([]byte(jsonData), &result)
+	err := json.Unmarshal([]byte(jsonData), &result)
+	if err != nil {
+		return
+	}
+
 	if msg, ok := result["message"]; ok {
 		log := ExtractLoggerWithOptions(ctx, zap.AddCallerSkip(1))
 		log.Debug(msg)

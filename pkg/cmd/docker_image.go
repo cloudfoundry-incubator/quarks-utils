@@ -41,10 +41,11 @@ func DockerImageFlags(pf *flag.FlagSet, argToEnv map[string]string, repo string,
 	pf.StringP("docker-image-tag", "t", tag, "Tag of the operator docker image")
 	pf.StringP("docker-image-pull-policy", "", string(corev1.PullIfNotPresent), "Image pull policy")
 
-	viper.BindPFlag("docker-image-org", pf.Lookup("docker-image-org"))
-	viper.BindPFlag("docker-image-repository", pf.Lookup("docker-image-repository"))
-	viper.BindPFlag("docker-image-tag", pf.Lookup("docker-image-tag"))
-	viper.BindPFlag("docker-image-pull-policy", pf.Lookup("docker-image-pull-policy"))
+	// TODO Check all of viper.BindPFlag on project level
+	viper.BindPFlag("docker-image-org", pf.Lookup("docker-image-org"))                 //nolint:errcheck
+	viper.BindPFlag("docker-image-repository", pf.Lookup("docker-image-repository"))   //nolint:errcheck
+	viper.BindPFlag("docker-image-tag", pf.Lookup("docker-image-tag"))                 //nolint:errcheck
+	viper.BindPFlag("docker-image-pull-policy", pf.Lookup("docker-image-pull-policy")) //nolint:errcheck
 
 	argToEnv["docker-image-org"] = "DOCKER_IMAGE_ORG"
 	argToEnv["docker-image-repository"] = "DOCKER_IMAGE_REPOSITORY"

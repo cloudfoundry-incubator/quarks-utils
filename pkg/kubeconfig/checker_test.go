@@ -34,7 +34,11 @@ var _ = Describe("Checker", func() {
 		"Check method",
 		func(c checkCase) {
 			logger := zap.NewNop()
-			defer logger.Sync()
+			defer func() {
+				serr := logger.Sync()
+				Expect(serr).To(BeNil())
+			}()
+
 			c.checker.log = logger.Sugar()
 
 			actualErr := c.checker.Check(c.cfg)

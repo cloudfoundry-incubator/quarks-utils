@@ -27,7 +27,10 @@ func newLogger(level string, options ...zap.Option) *zap.Logger {
 	}
 
 	l := zap.DebugLevel
-	l.Set(level)
+	err := l.Set(level)
+	if err != nil {
+		golog.Fatalf("cannot sets the level for ZAP logger: %v", err)
+	}
 
 	cfg := zap.NewDevelopmentConfig()
 	cfg.Development = false

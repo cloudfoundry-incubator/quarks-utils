@@ -19,6 +19,7 @@ func MonitoredID(cfg *config.Config) {
 // MonitoredIDFlags adds to viper flags
 func MonitoredIDFlags(pf *flag.FlagSet, argToEnv map[string]string) {
 	pf.String("monitored-id", "default", "only monitor namespaces with this id in their namespace label")
+	//nolint:errcheck
 	viper.BindPFlag("monitored-id", pf.Lookup("monitored-id"))
 	argToEnv["monitored-id"] = "MONITORED_ID"
 }

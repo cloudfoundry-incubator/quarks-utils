@@ -26,6 +26,7 @@ func KubeConfig(log *zap.SugaredLogger) (*rest.Config, error) {
 // KubeConfigFlags adds to viper flags
 func KubeConfigFlags(pf *flag.FlagSet, argToEnv map[string]string) {
 	pf.StringP("kubeconfig", "c", "", "Path to a kubeconfig, not required in-cluster")
+	//nolint:errcheck
 	viper.BindPFlag("kubeconfig", pf.Lookup("kubeconfig"))
 	argToEnv["kubeconfig"] = "KUBECONFIG"
 }
