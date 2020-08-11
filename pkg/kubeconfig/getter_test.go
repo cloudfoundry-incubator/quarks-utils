@@ -38,7 +38,11 @@ var _ = Describe("Getter", func() {
 		"Get method",
 		func(c getCase) {
 			logger := zap.NewNop()
-			defer logger.Sync()
+			defer func() {
+				serr := logger.Sync()
+				Expect(serr).To(BeNil())
+			}()
+
 			c.getter.log = logger.Sugar()
 
 			actualConfig, actualErr := c.getter.Get(c.configPath)

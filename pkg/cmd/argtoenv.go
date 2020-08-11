@@ -12,6 +12,7 @@ func AddEnvToUsage(cmd *cobra.Command, argToEnv map[string]string) {
 	flagSet := make(map[string]bool)
 
 	for arg, env := range argToEnv {
+		//nolint:errcheck
 		viper.BindEnv(arg, env)
 		flag := cmd.Flag(arg)
 
