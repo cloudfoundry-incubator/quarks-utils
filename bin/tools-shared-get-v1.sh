@@ -12,6 +12,10 @@ get_quarks_utils_bin() {
     exit 1
   fi
 
+  if [ -d /usr/local/opt/gnu-tar/libexec/gnubin ]; then
+    PATH="/usr/local/opt/gnu-tar/libexec/gnubin:$PATH"
+  fi
+
   mkdir -p tools/quarks-utils
   wget -qO - https://github.com/cloudfoundry-incubator/quarks-utils/archive/"$quarks_utils_version".tar.gz | \
     tar -C tools/quarks-utils -xz --strip-components=1 --no-anchored bin/
