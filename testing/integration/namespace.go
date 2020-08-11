@@ -39,7 +39,7 @@ func DumpENV(namespace string) {
 
 	// try to find our dump_env script
 	n := 1
-	_, filename, _, _ := runtime.Caller(2)
+	_, filename, _, _ := runtime.Caller(3)
 	if idx := strings.Index(filename, "integration/"); idx >= 0 {
 		n = strings.Count(filename[idx:], "/")
 	}
