@@ -205,8 +205,7 @@ func (f *Config) CreateValidationWebhookServerConfig(ctx context.Context, webhoo
 		}
 	}
 	ctxlog.Debugf(ctx, "Creating validation webhook config '%s'", config.Name)
-	err := f.client.Delete(ctx, config)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if err := f.client.Delete(ctx, config); err != nil && !apierrors.IsNotFound(err) {
 		ctxlog.Debugf(ctx, "Trying to deleting existing validatingWebhookConfiguration %s: %s", config.Name, err.Error())
 	}
 	return f.client.Create(ctx, config)
@@ -254,8 +253,7 @@ func (f *Config) CreateMutationWebhookServerConfig(ctx context.Context, webhooks
 	}
 
 	ctxlog.Debugf(ctx, "Creating mutating webhook config '%s'", config.Name)
-	err := f.client.Delete(ctx, &config)
-	if err != nil && !apierrors.IsNotFound(err) {
+	if err := f.client.Delete(ctx, &config); err != nil && !apierrors.IsNotFound(err) {
 		ctxlog.Debugf(ctx, "Trying to deleting existing mutatingWebhookConfiguration %s: %s", config.Name, err.Error())
 	}
 	return f.client.Create(ctx, &config)

@@ -27,8 +27,7 @@ func newLogger(level string, options ...zap.Option) *zap.Logger {
 	}
 
 	l := zap.DebugLevel
-	err := l.Set(level)
-	if err != nil {
+	if err := l.Set(level); err != nil {
 		golog.Fatalf("cannot sets the level for ZAP logger: %v", err)
 	}
 
