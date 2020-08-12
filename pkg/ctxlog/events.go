@@ -112,8 +112,7 @@ func (ev Event) debugJSON(ctx context.Context, objectInfo interface{}) {
 
 	// treat JSON data as a string map and extract message
 	var result map[string]string
-	err := json.Unmarshal([]byte(jsonData), &result)
-	if err != nil {
+	if err := json.Unmarshal([]byte(jsonData), &result); err != nil {
 		return
 	}
 

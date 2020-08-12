@@ -22,7 +22,6 @@ func MeltdownFlags(pf *flag.FlagSet, argToEnv map[string]string) {
 	pf.Int("meltdown-duration", 60, "Duration (in seconds) of the meltdown period, in which we postpone further reconciles for the same resource")
 	pf.Int("meltdown-requeue-after", 30, "Duration (in seconds) for which we delay the requeuing of the reconcile")
 	for _, opt := range []string{"meltdown-duration", "meltdown-requeue-after"} {
-		//nolint:errcheck
 		viper.BindPFlag(opt, pf.Lookup(opt))
 
 		argToEnv[opt] = envName(opt)

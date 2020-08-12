@@ -28,6 +28,6 @@ func ApplyCRDs(ctx context.Context, apply ApplyFn, restConfig *rest.Config) erro
 // ApplyCRDsFlags adds to viper flags
 func ApplyCRDsFlags(pf *flag.FlagSet, argToEnv map[string]string) {
 	pf.Bool("apply-crd", true, "If true, apply CRDs on start")
-	viper.BindPFlag("apply-crd", pf.Lookup("apply-crd")) //nolint:errcheck
+	viper.BindPFlag("apply-crd", pf.Lookup("apply-crd"))
 	argToEnv["apply-crd"] = "APPLY_CRD"
 }

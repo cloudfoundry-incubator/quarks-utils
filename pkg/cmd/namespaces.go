@@ -23,7 +23,6 @@ func OperatorNamespace(cfg *config.Config, log *zap.SugaredLogger, name string) 
 func OperatorNamespaceFlags(pf *flag.FlagSet, argToEnv map[string]string, name string) {
 	pf.StringP(name, "n", "default", "The operator namespace, for the webhook service")
 
-	//nolint:errcheck
 	viper.BindPFlag(name, pf.Lookup(name))
 
 	argToEnv[name] = envName(name)
