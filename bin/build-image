@@ -24,7 +24,6 @@ fi
 
 docker build "$GIT_ROOT" \
   --file "$GIT_ROOT/Dockerfile" \
-  --build-arg GO111MODULE="${GO111MODULE:-off}" \
   --tag "$image"
 
 if [ "$created_vendor" == 1 ]; then
