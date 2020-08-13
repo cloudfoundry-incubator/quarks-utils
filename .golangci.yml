@@ -12,6 +12,9 @@ issues:
   exclude-rules:
   - linters: [errcheck]
     text: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv|Errorf|viper.BindPFlag). is not checked"
+  skip-dirs:
+  - fakes
+
 linters:
   disable-all: true
   enable:
@@ -33,3 +36,4 @@ linters:
   - golint
   - gosimple
   - typecheck
+  - unused
