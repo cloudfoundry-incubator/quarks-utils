@@ -27,7 +27,6 @@ linters:
   - unparam
   - ineffassign
   - nakedret
-  - interfacer
   - gocyclo
   - dupl
   - goimports

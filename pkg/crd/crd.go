@@ -16,7 +16,7 @@ import (
 )
 
 // ApplyCRD creates or updates the CRD
-func ApplyCRD(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error { // nolint:interfacer
+func ApplyCRD(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error {
 	crd := &extv1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: crdName,
@@ -68,7 +68,7 @@ func ApplyCRD(ctx context.Context, client extv1client.ApiextensionsV1beta1Interf
 }
 
 // WaitForCRDReady blocks until the CRD is ready.
-func WaitForCRDReady(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName string) error { // nolint:interfacer
+func WaitForCRDReady(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName string) error {
 	err := wait.ExponentialBackoff(
 		wait.Backoff{
 			Duration: time.Second,
