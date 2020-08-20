@@ -71,6 +71,13 @@ func (m *Machine) WaitForPodsDelete(namespace string) error {
 	})
 }
 
+// WaitForPodRestart blocks until the pod is restarted. It fails after the timeout.
+func (m *Machine) WaitForPodRestart(namespace, podName string, startTime time.Time) error {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
+		return m.PodRestart(namespace, podName, startTime)
+	})
+}
+
 // PodsDeleted returns true if the all pods are deleted
 func (m *Machine) PodsDeleted(namespace string) (bool, error) {
 	podList, err := m.Clientset.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
@@ -97,6 +104,23 @@ func (m *Machine) PodRunning(namespace string, name string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// PodRestart returns true if the pod is restarted
+func (m *Machine) PodRestart(namespace string, name string, startTime time.Time) (bool, error) {
+	pod, err := m.Clientset.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, errors.Wrapf(err, "failed to query for pod by name: %s", name)
+	}
+
+	if pod.Status.StartTime == nil {
+		return false, nil
+	}
+
+	return pod.Status.StartTime.After(startTime), nil
 }
 
 // PodReady returns true if the pod by that name is ready.
