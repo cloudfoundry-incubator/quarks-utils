@@ -6,4 +6,4 @@
 [![Coveralls github](https://img.shields.io/coveralls/github/cloudfoundry-incubator/quarks-utils.svg?style=flat)](https://coveralls.io/github/cloudfoundry-incubator/quarks-utils?branch=HEAD)
 
 
-Shared code for Quarks operators.
+Shared code for Quarks operators, see https://quarks.suse.dev/docs/development/.
