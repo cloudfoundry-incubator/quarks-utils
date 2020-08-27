@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"path/filepath"
 	"strings"
 
@@ -29,15 +28,6 @@ weight: 1
 }
 
 // GenCLIDocsyMarkDown generates docsy-markdown files from cobra commands
-func GenCLIDocsyMarkDown(cmd *cobra.Command, docDir, index string) error {
-	err := doc.GenMarkdownTreeCustom(cmd, filepath.Join("./", docDir), func(s string) string { return docsyPrepend(s, docDir) }, markdownURLsToDocsy)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(filepath.Join("./", docDir, "_index.md"), []byte(index), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+func GenCLIDocsyMarkDown(cmd *cobra.Command, docDir string) error {
+	return doc.GenMarkdownTreeCustom(cmd, filepath.Join("./", docDir), func(s string) string { return docsyPrepend(s, docDir) }, markdownURLsToDocsy)
 }
