@@ -64,6 +64,13 @@ func (m *Machine) CreateNamespace(namespace string) (TearDownFunc, error) {
 	return m.CreateLabeledNamespace(namespace, map[string]string{})
 }
 
+// DeleteNamespace deletes a namespace, it returns an error if it fails
+func (m *Machine) DeleteNamespace(namespace string) error {
+	client := m.Clientset.CoreV1().Namespaces()
+	err := client.Delete(context.Background(), namespace, metav1.DeleteOptions{})
+	return err
+}
+
 // CreateLabeledNamespace creates a namespace, it doesn't return an error if the namespace exists
 func (m *Machine) CreateLabeledNamespace(namespace string, labels map[string]string) (TearDownFunc, error) {
 	client := m.Clientset.CoreV1().Namespaces()
