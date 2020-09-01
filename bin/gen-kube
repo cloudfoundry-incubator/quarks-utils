@@ -29,7 +29,7 @@ if [ -z ${CODEGEN_PKG+x} ]; then
   exit 1
 fi
 
-CODEGEN_VERSION=$(go list -u -m all | grep 'k8s.io/code-generator' | awk '{print $2}')
+CODEGEN_VERSION=$(go mod vendor -v 2>&1 | grep 'k8s.io/code-generator' | awk '/#/ {print $3}')
 
 echo
 echo "Using code-generator in $CODEGEN_PKG version $CODEGEN_VERSION"
@@ -41,12 +41,12 @@ echo "Generating group versions $GROUP_VERSIONS"
 
 [ ! -d "codegen" ] && mkdir codegen
 
-env GO111MODULE="$GO111MODULE" bash "${CODEGEN_PKG}/generate-groups.sh" "deepcopy,client,lister" \
-  code.cloudfoundry.org/${PROJECT}/pkg/kube/client \
-  code.cloudfoundry.org/${PROJECT}/pkg/kube/apis \
-  "${GROUP_VERSIONS}" \
-  --output-base "${GIT_ROOT}/codegen" \
-  --go-header-file "${GIT_ROOT}/gen/header.go.txt"
+env GO111MODULE="$GO111MODULE" bash "$CODEGEN_PKG/generate-groups.sh" "deepcopy,client,lister" \
+  "code.cloudfoundry.org/$PROJECT/pkg/kube/client" \
+  "code.cloudfoundry.org/$PROJECT/pkg/kube/apis" \
+  "$GROUP_VERSIONS" \
+  --output-base "$GIT_ROOT/codegen" \
+  --go-header-file "$GIT_ROOT/gen/header.go.txt"
 
-cp -rf ${GIT_ROOT}/codegen/code.cloudfoundry.org/${PROJECT}/pkg ${GIT_ROOT}
-rm -rf ${GIT_ROOT}/codegen
+cp -rf "$GIT_ROOT/codegen/code.cloudfoundry.org/$PROJECT/pkg" "$GIT_ROOT"
+rm -rf "$GIT_ROOT/codegen"
