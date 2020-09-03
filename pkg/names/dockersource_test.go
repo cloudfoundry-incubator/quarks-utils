@@ -24,10 +24,12 @@ var _ = Describe("DockerSource", func() {
 					result: "cfcontainerization/cf-operator:0.1-dev"},
 				{org: "cfcontainerization", repo: "cf-operator",
 					result: "cfcontainerization/cf-operator"},
-				{org: "", repo: "cf-operator", tag: "0.1-dev",
-					result: "cf-operator:0.1-dev"},
-				{org: "", repo: "cf-operator",
-					result: "cf-operator"},
+				{org: "", repo: "cf-operator", tag: "0.1-dev", result: "cf-operator:0.1-dev"},
+				{org: "", repo: "cf-operator", result: "cf-operator"},
+				{org: "", repo: "ubuntu@sha256:45b23dee08af5e43a7fea6c4cf9c25ccf269ee113168c19722f87876677c5cb2",
+					result: "ubuntu@sha256:45b23dee08af5e43a7fea6c4cf9c25ccf269ee113168c19722f87876677c5cb2"},
+				{org: "myregistry.local:5000/testing", repo: "test-image",
+					result: "myregistry.local:5000/testing/test-image"},
 			}
 
 			It("produces valid docker image sources", func() {
