@@ -6,10 +6,6 @@ GIT_ROOT="${GIT_ROOT:-$(git rev-parse --show-toplevel)}"
 . "$GIT_ROOT/bin/include/versioning"
 . "$GIT_ROOT/bin/include/docker"
 
-
-# Workaround since quarks-operator rename is  not complete
-PROJECT=${PROJECT//quarks-operator/cf-operator}
-
 image="$DOCKER_IMAGE_ORG/$PROJECT:$DOCKER_IMAGE_TAG"
 
 # Always vendor because `go mod edit -replace` might refer to paths outside of
