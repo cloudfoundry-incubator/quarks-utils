@@ -147,7 +147,7 @@ func InstallChart(chartPath string, operatorNamespace string, args ...string) (T
 
 	cmd := append([]string{
 		"install",
-		fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace),
+		fmt.Sprintf("%s-%s", testing.QuarksHelmRelease, operatorNamespace),
 		chartPath,
 		"--namespace", operatorNamespace,
 		"--timeout", fmt.Sprintf("%ss", installTimeOutInSecs),
@@ -163,7 +163,7 @@ func InstallChart(chartPath string, operatorNamespace string, args ...string) (T
 	time.Sleep(10 * time.Second)
 
 	return func() error {
-		err = testing.RunHelmBinaryWithCustomErr("delete", "-n", operatorNamespace, fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace))
+		err = testing.RunHelmBinaryWithCustomErr("delete", "-n", operatorNamespace, fmt.Sprintf("%s-%s", testing.QuarksHelmRelease, operatorNamespace))
 		if err != nil {
 			return err
 		}
@@ -181,7 +181,7 @@ func UpgradeChart(chartPath string, operatorNamespace string, args ...string) (T
 
 	cmd := append([]string{
 		"upgrade",
-		fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace),
+		fmt.Sprintf("%s-%s", testing.QuarksHelmRelease, operatorNamespace),
 		chartPath,
 		"--namespace", operatorNamespace,
 		"--timeout", fmt.Sprintf("%ss", installTimeOutInSecs),
@@ -197,7 +197,7 @@ func UpgradeChart(chartPath string, operatorNamespace string, args ...string) (T
 	time.Sleep(10 * time.Second)
 
 	return func() error {
-		err = testing.RunHelmBinaryWithCustomErr("delete", "-n", operatorNamespace, fmt.Sprintf("%s-%s", testing.CFOperatorRelease, operatorNamespace))
+		err = testing.RunHelmBinaryWithCustomErr("delete", "-n", operatorNamespace, fmt.Sprintf("%s-%s", testing.QuarksHelmRelease, operatorNamespace))
 		if err != nil {
 			return err
 		}

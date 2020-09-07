@@ -11,9 +11,9 @@ import (
 )
 
 // NewTestLogger returns a ZAP logger for assertions, which also logs to
-// <tmpdir>/cf-operator-tests.log
+// <tmpdir>/quarks-tests.log
 func NewTestLogger() (obs *observer.ObservedLogs, log *zap.SugaredLogger) {
-	return NewTestLoggerWithPath(LogfilePath("cf-operator-tests.log"))
+	return NewTestLoggerWithPath(LogfilePath("quarks-tests.log"))
 }
 
 // NewTestLoggerWithPath returns a logger which logs to path
