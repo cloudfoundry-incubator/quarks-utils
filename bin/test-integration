@@ -18,7 +18,7 @@ fi
 name="${INTEGRATION_SUITE:-}"
 : "${CF_OPERATOR_TESTING_TMP:=/tmp}"
 mkdir -p "$CF_OPERATOR_TESTING_TMP"
-echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests.log"
+echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/${PROJECT}-tests-*.log"
 
 # ginkgo debug mode
 DEBUG=${DEBUG:+--debug}
