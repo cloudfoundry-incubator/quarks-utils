@@ -10,10 +10,6 @@ if [ -z ${TEST_NAMESPACE+x} ]; then
   export TEST_NAMESPACE
 fi
 
-if [ -z "${SKIP_BUILD_HELM:-}" ]; then
-  ${GIT_ROOT}/bin/build-helm
-fi
-
 NODES=${NODES:-3}
 FLAKE_ATTEMPTS=${FLAKE_ATTEMPTS:-3}
 ginkgo \
