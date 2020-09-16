@@ -30,6 +30,8 @@ var _ = Describe("DockerSource", func() {
 					result: "ubuntu@sha256:45b23dee08af5e43a7fea6c4cf9c25ccf269ee113168c19722f87876677c5cb2"},
 				{org: "myregistry.local:5000/testing", repo: "test-image",
 					result: "myregistry.local:5000/testing/test-image"},
+				{org: "ghcr.io", repo: "mybot",
+					result: "ghcr.io/mybot"},
 			}
 
 			It("produces valid docker image sources", func() {
