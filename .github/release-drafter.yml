@@ -26,10 +26,6 @@ version-resolver:
       - 'patch'
   default: patch
 template: |
-
-  * https://hub.helm.sh/charts/quarks/quarks-job
-  * https://hub.docker.com/r/cfcontainerization/quarks-job/tags
-
   ## Changes
 
   $CHANGES
