@@ -259,6 +259,8 @@ name: fake-deployment-v4
 					switch object := object.(type) {
 					case *corev1.Secret:
 						Expect(object.GetName()).To(Equal(fmt.Sprintf("%s-v%d", secretNamePrefix, 1)))
+						Expect(object.GetOwnerReferences()[0].Name).To(Equal("some-owner"))
+						Expect(object.GetOwnerReferences()[0].Kind).To(Equal("some-kind"))
 						return nil
 					}
 					return nil
@@ -269,6 +271,7 @@ name: fake-deployment-v4
 					namespace,
 					"some-owner",
 					types.UID("d3d423b7-a57f-43b0-8305-79d484154e4f"),
+					"some-kind",
 					secretNamePrefix,
 					map[string]string{
 						"manifest": `{"instance_groups":[{"instances":3,"name":"diego"},{"instances":2,"name":"mysql"}]}`,
@@ -317,6 +320,7 @@ name: fake-deployment-v4
 					namespace,
 					"some-owner",
 					types.UID("d3d423b7-a57f-43b0-8305-79d484154e4f"),
+					"some-kind",
 					secretNamePrefix,
 					map[string]string{
 						"manifest": `{"instance_groups":[{"instances":3,"name":"diego"},{"instances":2,"name":"mysql"}]}`,
@@ -350,6 +354,7 @@ name: fake-deployment-v4
 					namespace,
 					"some-owner",
 					types.UID("d3d423b7-a57f-43b0-8305-79d484154e4f"),
+					"some-kind",
 					secretNamePrefix,
 					data,
 					secretAnnotations,
@@ -370,6 +375,7 @@ name: fake-deployment-v4
 					namespace,
 					"some-owner",
 					types.UID("d3d423b7-a57f-43b0-8305-79d484154e4f"),
+					"some-kind",
 					strings.Repeat("foobar", 42),
 					map[string]string{
 						"manifest": `{"instance_groups":[{"instances":3,"name":"diego"},{"instances":2,"name":"mysql"}]}`,
