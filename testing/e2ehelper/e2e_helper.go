@@ -254,6 +254,7 @@ func AddHelmRepo(repo, url string) (TearDownFunc, error) {
 	err = testing.RunHelmBinaryWithCustomErr(
 		"repo",
 		"add",
+		"--force-update",
 		repo, url,
 	)
 	if err != nil {
