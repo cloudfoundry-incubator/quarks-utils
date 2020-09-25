@@ -10,3 +10,9 @@ image="$DOCKER_IMAGE_ORG/$PROJECT:$DOCKER_IMAGE_TAG"
 
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 docker push "$image"
+
+
+echo "$PERSONAL_ACCESS_TOKEN" | docker login ghcr.io -u "cfcontainerizationbot" --password-stdin
+ghcr="ghcr.io/cloudfoundry-incubator/$PROJECT:$DOCKER_IMAGE_TAG"
+docker tag "$image" "$ghcr"
+docker push "$ghcr"
