@@ -8,6 +8,10 @@ if [ ${COVERAGE+x} ]; then
   COV_ARG="-cover -outputdir=./code-coverage"
 fi
 
+: "${CF_OPERATOR_TESTING_TMP:=/tmp}"
+mkdir -p "$CF_OPERATOR_TESTING_TMP"
+echo "Test logs are here: ${CF_OPERATOR_TESTING_TMP}/cf-operator-tests.log"
+
 mkdir -p code-coverage
 ginkgo -p -r \
   --randomizeAllSpecs \
