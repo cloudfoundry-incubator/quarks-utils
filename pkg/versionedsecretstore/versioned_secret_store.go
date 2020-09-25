@@ -80,7 +80,7 @@ type versionedSecretStoreBackend interface {
 // the Custom Resource Definition that generated it.
 type VersionedSecretStore interface {
 	SetSecretReferences(ctx context.Context, namespace string, podSpec *corev1.PodSpec) error
-	Create(ctx context.Context, namespace string, ownerName string, ownerID types.UID, secretName string, secretData map[string]string, annotations map[string]string, labels map[string]string, sourceDescription string) error
+	Create(ctx context.Context, namespace string, ownerName string, ownerID types.UID, ownerKind string, secretName string, secretData map[string]string, annotations map[string]string, labels map[string]string, sourceDescription string) error
 	Get(ctx context.Context, namespace string, secretName string, version int) (*corev1.Secret, error)
 	Latest(ctx context.Context, namespace string, secretName string) (*corev1.Secret, error)
 	List(ctx context.Context, namespace string, secretName string) ([]corev1.Secret, error)
@@ -168,6 +168,7 @@ func (p VersionedSecretImpl) Create(ctx context.Context,
 	namespace string,
 	ownerName string,
 	ownerID types.UID,
+	ownerKind string,
 	secretName string,
 	secretData map[string]string,
 	annotations map[string]string,
@@ -238,7 +239,7 @@ func (p VersionedSecretImpl) Create(ctx context.Context,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion:         LabelAPIVersion,
-					Kind:               "QuarksJob",
+					Kind:               ownerKind,
 					Name:               ownerName,
 					UID:                ownerID,
 					BlockOwnerDeletion: pointers.Bool(false),
