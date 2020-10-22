@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	// CFOperatorRelease is the default cf-operator release name
-	CFOperatorRelease = "cf-operator"
+	// QuarksHelmRelease is the default quarks-operator helm release name
+	QuarksHelmRelease = "quarks"
 	helmCmd           = "helm"
 	kubeCtlCmd        = "kubectl"
 )
@@ -441,7 +441,7 @@ func SecretCheckData(namespace string, secretName string, fieldPath string) erro
 
 // RestartOperator restart Operator Deployment
 func RestartOperator(namespace string) error {
-	deploymentName := fmt.Sprintf("deployment/%s-%s", CFOperatorRelease, namespace)
+	deploymentName := fmt.Sprintf("deployment/%s-%s", QuarksHelmRelease, namespace)
 	fmt.Println("Restarting '" + deploymentName + "'...")
 
 	_, err := runBinary(kubeCtlCmd, "patch", deploymentName,
