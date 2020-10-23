@@ -6,7 +6,7 @@ require (
 	github.com/cloudflare/cfssl v1.4.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/go-logr/zapr v0.1.1
-	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/afero v1.2.2
