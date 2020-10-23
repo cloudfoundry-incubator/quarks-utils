@@ -1,6 +1,6 @@
 module code.cloudfoundry.org/quarks-utils
 
-go 1.13
+go 1.15
 
 require (
 	github.com/cloudflare/cfssl v1.4.1
