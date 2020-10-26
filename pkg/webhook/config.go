@@ -59,9 +59,9 @@ func NewConfig(c client.Client, config *config.Config, generator credsgen.Genera
 // webhook server.
 // It caches the certificate data in a secret and writes it as
 // files to `CertDir`, for `webhook.Server` to use.
-func (f *Config) SetupCertificate(ctx context.Context) error {
+func (f *Config) SetupCertificate(ctx context.Context, prefix string) error {
 	secretNamespacedName := machinerytypes.NamespacedName{
-		Name:      "cf-operator-webhook-server-cert",
+		Name:      prefix + "-server-cert",
 		Namespace: f.config.OperatorNamespace,
 	}
 
@@ -91,7 +91,7 @@ func (f *Config) SetupCertificate(ctx context.Context) error {
 		commonName := f.config.WebhookServerHost
 		// If provider is GKE, use service address
 		if f.config.WebhookUseServiceRef {
-			commonName = "cf-operator-webhook." + f.config.OperatorNamespace + ".svc"
+			commonName = prefix + "." + f.config.OperatorNamespace + ".svc"
 		}
 
 		// Generate Certificate
@@ -104,7 +104,7 @@ func (f *Config) SetupCertificate(ctx context.Context) error {
 				Certificate: caCert.Certificate,
 			},
 		}
-		cert, err := f.generator.GenerateCertificate("webhook-server-cert", request)
+		cert, err := f.generator.GenerateCertificate(prefix+"-server-cert", request)
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,12 @@ func (f *Config) SetupCertificate(ctx context.Context) error {
 		f.Key = cert.PrivateKey
 		f.Certificate = cert.Certificate
 	} else {
-		ctxlog.Info(ctx, "Not creating the webhook server certificate because it already exists")
+		ctxlog.Infof(ctx, "Not creating the webhook server certificate '%s' because it already exists", secretNamespacedName)
+		if err != nil {
+			// this is covered by unit tests, but does it happen in production?
+			ctxlog.Debugf(ctx, "Ignoring error for webhook server certificate: %s", err)
+		}
+
 		data := secret.Object["data"].(map[string]interface{})
 		caKey, err := base64.StdEncoding.DecodeString(data["ca_private_key"].(string))
 		if err != nil {
@@ -212,7 +217,7 @@ func (f *Config) CreateValidationWebhookServerConfig(ctx context.Context, webhoo
 }
 
 // CreateMutationWebhookServerConfig creates a new config for an array of mutating webhoooks
-func (f *Config) CreateMutationWebhookServerConfig(ctx context.Context, webhooks []*OperatorWebhook) error {
+func (f *Config) CreateMutationWebhookServerConfig(ctx context.Context, name string, webhooks []*OperatorWebhook) error {
 	if len(f.CaCertificate) == 0 {
 		return fmt.Errorf("can not create a webhook server config with an empty ca certificate")
 	}
@@ -229,7 +234,7 @@ func (f *Config) CreateMutationWebhookServerConfig(ctx context.Context, webhooks
 		if f.config.WebhookUseServiceRef {
 			clientConfig := admissionregistration.WebhookClientConfig{
 				Service: &admissionregistration.ServiceReference{
-					Name:      "cf-operator-webhook",
+					Name:      name,
 					Namespace: f.config.OperatorNamespace,
 					Path:      &webhook.Path,
 				},
