@@ -10,8 +10,8 @@ cp  helm/index.yaml updated/
 
 pushd updated || exit
   git add .
-  git config --global user.name "CFContainerizationBot"
-  git config --global user.email "cfcontainerizationbot@cloudfoundry.org"
+  git config user.name "CFContainerizationBot"
+  git config user.email "cfcontainerizationbot@cloudfoundry.org"
   git commit -m "add $PROJECT chart: $version"
   git push
 popd || exit
