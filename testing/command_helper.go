@@ -632,9 +632,9 @@ func GetCRDs() (*ClusterCrd, error) {
 }
 
 // DeleteWebhooks removes existing webhookconfiguration and validatingwebhookconfiguration
-func DeleteWebhooks(ns string) error {
+func DeleteWebhooks(ns string, name string) error {
 	var messages string
-	webHookName := fmt.Sprintf("%s-%s", "cf-operator-hook", ns)
+	webHookName := fmt.Sprintf("%s-%s", name, ns)
 
 	_, err := runBinary(kubeCtlCmd, "delete", "--ignore-not-found", "mutatingwebhookconfiguration", webHookName)
 	if err != nil {
