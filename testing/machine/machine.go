@@ -249,3 +249,18 @@ func (m *Machine) GetNodes() ([]corev1.Node, error) {
 
 	return nodes, nil
 }
+
+// WaitForServiceAccount blocks until the service account exists
+func (m *Machine) WaitForServiceAccount(namespace string, name string) error {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
+		_, err := m.Clientset.CoreV1().ServiceAccounts(namespace).Get(context.Background(), name, metav1.GetOptions{})
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return false, nil
+			}
+			return false, errors.Wrapf(err, "failed to query for service account by name: %s", name)
+		}
+
+		return true, nil
+	})
+}
