@@ -30,7 +30,8 @@ func SetupNamespace(e *Environment, m machine.Machine, labels map[string]string)
 		return errors.Wrapf(err, "Integration setup failed. Creating namespace %s failed", e.Namespace)
 	}
 	e.TeardownFunc = nsTeardown
-	return nil
+
+	return m.WaitForServiceAccount(e.Namespace, "default")
 }
 
 // DumpENV executes testing/dump_env.sh to write k8s resources to files
