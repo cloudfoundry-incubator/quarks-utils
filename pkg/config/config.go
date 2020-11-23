@@ -16,9 +16,10 @@ const (
 
 // Config controls the behaviour of different controllers
 type Config struct {
-	CtxTimeOut           time.Duration
-	MeltdownDuration     time.Duration
-	MeltdownRequeueAfter time.Duration
+	CtxTimeOut               time.Duration
+	MeltdownDuration         time.Duration
+	MeltdownRequeueAfter     time.Duration
+	RegistryCredentialSecret string
 	// MonitoredID we look for in namespace labels, before acting
 	MonitoredID string
 	// OperatorNamespace is where the webhook services of the operator are placed
