@@ -1,3 +1,4 @@
+// Package testhelper has common helpers for tests
 package testhelper
 
 import (

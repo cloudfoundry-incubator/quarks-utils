@@ -1,3 +1,4 @@
+// Package cmd provides viper/cobra for shared command line flags
 package cmd
 
 import (

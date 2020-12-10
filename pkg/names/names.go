@@ -1,3 +1,4 @@
+// Package names has helpers for naming resources and generating strings
 package names
 
 import (

@@ -1,3 +1,4 @@
+// Package monitorednamespace returns a predicate to filter for resources with the right monitored label, it enables one operator to act on multiple, labeled namespace
 package monitorednamespace
 
 import (

@@ -1,3 +1,4 @@
+// Package ratelimiter provides custom controller-runtime ratelimiters
 package ratelimiter
 
 import (

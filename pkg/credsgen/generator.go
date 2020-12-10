@@ -1,3 +1,4 @@
+// Package credsgen is an interface for generating different kinds of credentials
 package credsgen
 
 const (

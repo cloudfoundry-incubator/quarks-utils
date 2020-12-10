@@ -1,3 +1,4 @@
+// Package logger creates a logger for operators
 package logger
 
 import (

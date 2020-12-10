@@ -1,3 +1,4 @@
+// Package versionedsecretstore impements versioned secrets, by appending a version suffix to their name
 package versionedsecretstore
 
 import (

@@ -1,3 +1,4 @@
+// Package e2ehelper has common functionality for the end-to-end test suites
 package e2ehelper
 
 import (

@@ -1,3 +1,4 @@
+// Package pod has helpers to deal with the Pod struct
 package pod
 
 import (
