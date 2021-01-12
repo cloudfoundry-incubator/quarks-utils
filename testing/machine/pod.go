@@ -49,6 +49,19 @@ func (m *Machine) WaitForPods(namespace string, labels string) error {
 	})
 }
 
+// WaitForPodCount blocks until the specified number of pods is running
+func (m *Machine) WaitForPodCount(namespace string, labels string, count int) error {
+	return wait.PollImmediate(m.PollInterval, m.PollTimeout, func() (bool, error) {
+		n, err := m.PodCount(namespace, labels, func(pod corev1.Pod) bool {
+			return pod.Status.Phase == corev1.PodRunning
+		})
+		if err != nil {
+			return false, err
+		}
+		return n == count, nil
+	})
+}
+
 // WaitForPodFailures blocks until all selected pods are failing. It fails after the timeout.
 func (m *Machine) WaitForPodFailures(namespace string, labels string) error {
 	return wait.PollImmediate(5*time.Second, m.PollTimeout, func() (bool, error) {
