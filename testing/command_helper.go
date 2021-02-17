@@ -140,6 +140,20 @@ func (k *Kubectl) ServiceExists(namespace string, serviceName string) (bool, err
 	return false, nil
 }
 
+// ServiceWorks returns true if the service is accessible
+func (k *Kubectl) ServiceWorks(namespace, serviceName string) (bool, error) {
+	out, err := runBinary("kubectl", "run", "-i", "--rm", "--restart=Never", "busybox", "--image=gcr.io/google-containers/busybox", "--namespace", namespace,
+		"--command", "nslookup", serviceName)
+	if err != nil {
+		return false, errors.Wrapf(err, "checking service %s failed. %s", serviceName, string(out))
+	}
+	dnsAddress := fmt.Sprintf("%s.%s.svc.cluster.local", serviceName, namespace)
+	if strings.Contains(string(out), dnsAddress) {
+		return true, nil
+	}
+	return false, nil
+}
+
 // Exists returns true if the resource by that name exists
 func (k *Kubectl) Exists(namespace, resource, name string) (bool, error) {
 	out, err := runBinary(kubeCtlCmd, "--namespace", namespace, "get", resource, name)
