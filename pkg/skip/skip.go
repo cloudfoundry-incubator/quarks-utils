@@ -1,3 +1,4 @@
+// Package skip helps with skiping reconciles for stale resources
 package skip
 
 import (

@@ -1,3 +1,4 @@
+// Package testing provides helpers for tests, like wrappers for kubectl and helm
 package testing
 
 import (

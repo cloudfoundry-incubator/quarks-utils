@@ -1,3 +1,4 @@
+// Package util has helpers for dealing with maps and integers
 package util
 
 // UnionMaps creates a new map with all values contained in the maps passed to this function

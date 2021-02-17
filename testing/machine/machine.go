@@ -1,3 +1,4 @@
+// Package machine builds k8s resources for use in integration tests
 package machine
 
 import (

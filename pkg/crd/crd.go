@@ -1,3 +1,4 @@
+// Package crd handles the creation and updating of our CRDs in the cluster
 package crd
 
 import (

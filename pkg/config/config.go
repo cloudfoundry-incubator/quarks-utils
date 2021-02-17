@@ -1,3 +1,4 @@
+// Package config provides the common configuration of the Quarks operators
 package config
 
 import (

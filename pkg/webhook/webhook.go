@@ -1,3 +1,4 @@
+// Package webhook contains shared infrastructure for setting up webhook configs and certificates
 package webhook
 
 import (

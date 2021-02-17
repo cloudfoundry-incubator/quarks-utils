@@ -1,3 +1,4 @@
+// Package kubeconfig  gets a valid kube config
 package kubeconfig
 
 import (

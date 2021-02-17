@@ -1,3 +1,4 @@
+// Package meltdown is used by reconcilers to delay reconciling if too many updates happen to a resource
 package meltdown
 
 import (

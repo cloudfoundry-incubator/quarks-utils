@@ -1,3 +1,4 @@
+// Package pointers has helpers to return pointers for basic types
 package pointers
 
 // Int returns a pointer to the int value provided

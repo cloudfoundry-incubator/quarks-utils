@@ -1,3 +1,4 @@
+// Package environment adds everything around mgr.Start() to run a local operator for the integration test suites
 package environment
 
 import (
