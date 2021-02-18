@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 
-	admissionregistration "k8s.io/api/admissionregistration/v1beta1"
+	admissionregistration "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -184,6 +184,8 @@ func (f *Config) CreateValidationWebhookServerConfig(ctx context.Context, webhoo
 	for _, webhook := range webhooks {
 		ctxlog.Debugf(ctx, "Calculating validation webhook '%s'", webhook.Name)
 
+		sideEffect := admissionregistration.SideEffectClassNone
+		admissionReviewVersions := []string{"v1beta1", "v1"}
 		if f.config.WebhookUseServiceRef {
 			clientConfig := admissionregistration.WebhookClientConfig{
 				CABundle: f.CaCertificate,
@@ -193,7 +195,7 @@ func (f *Config) CreateValidationWebhookServerConfig(ctx context.Context, webhoo
 					Path:      &webhook.Path,
 				},
 			}
-			config.Webhooks = append(config.Webhooks, f.newValidatingWebhook(webhook, clientConfig))
+			config.Webhooks = append(config.Webhooks, f.newValidatingWebhook(webhook, clientConfig, sideEffect, admissionReviewVersions))
 		} else {
 			url := url.URL{
 				Scheme: "https",
@@ -206,7 +208,7 @@ func (f *Config) CreateValidationWebhookServerConfig(ctx context.Context, webhoo
 				CABundle: f.CaCertificate,
 				URL:      &urlString,
 			}
-			config.Webhooks = append(config.Webhooks, f.newValidatingWebhook(webhook, clientConfig))
+			config.Webhooks = append(config.Webhooks, f.newValidatingWebhook(webhook, clientConfig, sideEffect, admissionReviewVersions))
 		}
 	}
 	ctxlog.Debugf(ctx, "Creating validation webhook config '%s'", config.Name)
@@ -231,6 +233,8 @@ func (f *Config) CreateMutationWebhookServerConfig(ctx context.Context, name str
 	for _, webhook := range webhooks {
 		ctxlog.Debugf(ctx, "Calculating mutating webhook '%s'", webhook.Name)
 
+		sideEffect := admissionregistration.SideEffectClassNone
+		admissionReviewVersions := []string{"v1beta1", "v1"}
 		if f.config.WebhookUseServiceRef {
 			clientConfig := admissionregistration.WebhookClientConfig{
 				Service: &admissionregistration.ServiceReference{
@@ -240,7 +244,7 @@ func (f *Config) CreateMutationWebhookServerConfig(ctx context.Context, name str
 				},
 				CABundle: f.CaCertificate,
 			}
-			config.Webhooks = append(config.Webhooks, f.newMutatingWebhook(webhook, clientConfig))
+			config.Webhooks = append(config.Webhooks, f.newMutatingWebhook(webhook, clientConfig, sideEffect, admissionReviewVersions))
 		} else {
 			url := url.URL{
 				Scheme: "https",
@@ -253,7 +257,7 @@ func (f *Config) CreateMutationWebhookServerConfig(ctx context.Context, name str
 				CABundle: f.CaCertificate,
 				URL:      &urlString,
 			}
-			config.Webhooks = append(config.Webhooks, f.newMutatingWebhook(webhook, clientConfig))
+			config.Webhooks = append(config.Webhooks, f.newMutatingWebhook(webhook, clientConfig, sideEffect, admissionReviewVersions))
 		}
 	}
 
@@ -292,24 +296,35 @@ func (f *Config) writeSecretFiles() error {
 	return nil
 }
 
-func (f *Config) newValidatingWebhook(webhook *OperatorWebhook, clientConfig admissionregistration.WebhookClientConfig) admissionregistration.ValidatingWebhook {
+func (f *Config) newValidatingWebhook(
+	webhook *OperatorWebhook,
+	clientConfig admissionregistration.WebhookClientConfig,
+	sideEffect admissionregistration.SideEffectClass,
+	admissionReviewVersions []string) admissionregistration.ValidatingWebhook {
 	wh := admissionregistration.ValidatingWebhook{
-		Name:              webhook.Name,
-		Rules:             webhook.Rules,
-		FailurePolicy:     &webhook.FailurePolicy,
-		NamespaceSelector: webhook.NamespaceSelector,
-		ClientConfig:      clientConfig,
+		Name:                    webhook.Name,
+		Rules:                   webhook.Rules,
+		FailurePolicy:           &webhook.FailurePolicy,
+		NamespaceSelector:       webhook.NamespaceSelector,
+		ClientConfig:            clientConfig,
+		SideEffects:             &sideEffect,
+		AdmissionReviewVersions: admissionReviewVersions,
 	}
 	return wh
 }
 
-func (f *Config) newMutatingWebhook(webhook *OperatorWebhook, clientConfig admissionregistration.WebhookClientConfig) admissionregistration.MutatingWebhook {
+func (f *Config) newMutatingWebhook(webhook *OperatorWebhook,
+	clientConfig admissionregistration.WebhookClientConfig,
+	sideEffect admissionregistration.SideEffectClass,
+	admissionReviewVersions []string) admissionregistration.MutatingWebhook {
 	wh := admissionregistration.MutatingWebhook{
-		Name:              webhook.Name,
-		Rules:             webhook.Rules,
-		FailurePolicy:     &webhook.FailurePolicy,
-		NamespaceSelector: webhook.NamespaceSelector,
-		ClientConfig:      clientConfig,
+		Name:                    webhook.Name,
+		Rules:                   webhook.Rules,
+		FailurePolicy:           &webhook.FailurePolicy,
+		NamespaceSelector:       webhook.NamespaceSelector,
+		ClientConfig:            clientConfig,
+		SideEffects:             &sideEffect,
+		AdmissionReviewVersions: admissionReviewVersions,
 	}
 	return wh
 }

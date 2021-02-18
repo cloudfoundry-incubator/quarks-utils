@@ -38,13 +38,13 @@ func monitored(ctx context.Context, client client.Client, name string, id string
 func NewNSPredicate(ctx context.Context, client client.Client, id string) predicate.Funcs {
 	return predicate.Funcs{
 		CreateFunc: func(e event.CreateEvent) bool {
-			name := e.Meta.GetNamespace()
+			name := e.Object.GetNamespace()
 			return monitored(ctx, client, name, id)
 		},
 		DeleteFunc:  func(e event.DeleteEvent) bool { return false },
 		GenericFunc: func(e event.GenericEvent) bool { return false },
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			name := e.MetaNew.GetNamespace()
+			name := e.ObjectNew.GetNamespace()
 			return monitored(ctx, client, name, id)
 		},
 	}
