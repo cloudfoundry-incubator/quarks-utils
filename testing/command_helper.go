@@ -18,6 +18,8 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+
+	"code.cloudfoundry.org/quarks-utils/pkg/names"
 )
 
 const (
@@ -140,9 +142,21 @@ func (k *Kubectl) ServiceExists(namespace string, serviceName string) (bool, err
 	return false, nil
 }
 
+// Curl returns output if the service is accessible
+func (k *Kubectl) Curl(namespace, url string) ([]byte, error) {
+	podName, _ := names.JobName("curl")
+	out, err := runBinary("kubectl", "run", "-i", "--rm", "--restart=Never", podName, "--image=gcr.io/cloud-builders/curl", "--namespace", namespace,
+		"--command", "curl", "-k", url)
+	if err != nil {
+		return []byte(""), errors.Wrapf(err, "curl '%s' failed: %s", url, string(out))
+	}
+	return out, nil
+}
+
 // ServiceWorks returns true if the service is accessible
 func (k *Kubectl) ServiceWorks(namespace, serviceName string) (bool, error) {
-	out, err := runBinary("kubectl", "run", "-i", "--rm", "--restart=Never", "busybox", "--image=gcr.io/google-containers/busybox", "--namespace", namespace,
+	podName, _ := names.JobName("busybox")
+	out, err := runBinary("kubectl", "run", "-i", "--rm", "--restart=Never", podName, "--image=gcr.io/google-containers/curl", "--namespace", namespace,
 		"--command", "nslookup", serviceName)
 	if err != nil {
 		return false, errors.Wrapf(err, "checking service %s failed. %s", serviceName, string(out))
