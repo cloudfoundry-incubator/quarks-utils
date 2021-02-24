@@ -22,7 +22,7 @@ func NewCallQueue(funcs ...expectFunc) CallQueue {
 
 // Calls can be used with counterfeiters *Calls functions
 // to set the stub functions
-func (q *CallQueue) Calls(context context.Context, object runtime.Object, _ ...crc.UpdateOption) error {
+func (q *CallQueue) Calls(context context.Context, object crc.Object, _ ...crc.UpdateOption) error {
 	n := q.n
 	if n >= len(q.calls) {
 		return nil
