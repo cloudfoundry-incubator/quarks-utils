@@ -156,7 +156,7 @@ func (k *Kubectl) Curl(namespace, url string) ([]byte, error) {
 // ServiceWorks returns true if the service is accessible
 func (k *Kubectl) ServiceWorks(namespace, serviceName string) (bool, error) {
 	podName, _ := names.JobName("busybox")
-	out, err := runBinary("kubectl", "run", "-i", "--rm", "--restart=Never", podName, "--image=gcr.io/google-containers/curl", "--namespace", namespace,
+	out, err := runBinary("kubectl", "run", "-i", "--rm", "--restart=Never", podName, "--image=gcr.io/google-containers/busybox", "--namespace", namespace,
 		"--command", "nslookup", serviceName)
 	if err != nil {
 		return false, errors.Wrapf(err, "checking service %s failed. %s", serviceName, string(out))
