@@ -2,6 +2,7 @@
 package environment
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -32,15 +33,16 @@ type Environment struct {
 	Config       *config.Config
 	ObservedLogs *observer.ObservedLogs
 	Namespace    string
-	Stop         chan struct{}
+	ctx          context.Context
+	cancel       context.CancelFunc
 }
 
 // StartManager is used to clean up the test environment
 func (e *Environment) StartManager(mgr manager.Manager) {
-	e.Stop = make(chan struct{})
+	e.ctx, e.cancel = context.WithCancel(context.Background())
 	go func() {
 		defer ginkgo.GinkgoRecover()
-		gomega.Expect(mgr.Start(e.Stop)).NotTo(gomega.HaveOccurred())
+		gomega.Expect(mgr.Start(e.ctx)).NotTo(gomega.HaveOccurred())
 	}()
 }
 
@@ -50,9 +52,7 @@ func (e *Environment) Teardown(wasFailure bool) {
 		DumpENV(e.Namespace)
 	}
 
-	if e.Stop != nil {
-		close(e.Stop)
-	}
+	e.cancel()
 
 	gexec.Kill()
 

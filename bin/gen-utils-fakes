@@ -4,3 +4,4 @@ set -e
 [ ! -d "vendor" ] && echo "$0 requires vendor/ folder, run 'go mod vendor'"
 
 counterfeiter -o pkg/credsgen/fakes/generator.go pkg/credsgen/ Generator
+counterfeiter -o pkg/fakes/client.go vendor/sigs.k8s.io/controller-runtime/pkg/client Client
