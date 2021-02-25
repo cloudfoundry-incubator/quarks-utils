@@ -3,11 +3,10 @@ package testhelper
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	crc "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type expectFunc func(context.Context, runtime.Object) error
+type expectFunc func(context.Context, crc.Object) error
 
 // CallQueue represents a list of expected function calls
 type CallQueue struct {
