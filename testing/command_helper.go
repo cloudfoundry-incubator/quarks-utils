@@ -470,8 +470,7 @@ func SecretCheckData(namespace string, secretName string, fieldPath string) erro
 
 // RestartOperator restart Operator Deployment
 func RestartOperator(namespace string) error {
-	deploymentName := fmt.Sprintf("deployment/%s-%s", QuarksHelmRelease, namespace)
-	fmt.Println("Restarting '" + deploymentName + "'...")
+	deploymentName := fmt.Sprintf("deployment/%s", QuarksHelmRelease)
 
 	_, err := runBinary(kubeCtlCmd, "patch", deploymentName,
 		"--namespace", namespace, "--patch", "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"dummy-date\":\"`date +'%s'`\"}}}}}")
