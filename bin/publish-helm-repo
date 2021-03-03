@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o errexit
+
 version="$ARTIFACT_VERSION"
 
 # https://github.com/helm/helm/issues/7363
