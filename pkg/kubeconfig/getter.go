@@ -48,6 +48,18 @@ func (g *getter) Get(configPath string) (*rest.Config, error) {
 		// If no explicit location, try the in-cluster config.
 		_, okHost := g.lookupEnv("KUBERNETES_SERVICE_HOST")
 		_, okPort := g.lookupEnv("KUBERNETES_SERVICE_PORT")
+		// Work around https://github.com/kubernetes/kubernetes/issues/40973
+		if !okHost{
+			addrs, err := net.LookupHost("kubernetes.default.svc")
+			if err == nil {
+				os.Setenv("KUBERNETES_SERVICE_HOST", addrs[0])
+				okHost := true
+				if !okPort{
+					os.Setenv("KUBERNETES_SERVICE_PORT", "443")
+					okPort := true
+				}
+			}
+		}
 		if okHost && okPort {
 			c, err := g.inClusterConfig()
 			if err == nil {
