@@ -6,10 +6,9 @@ import (
 	"reflect"
 	"time"
 
-	"code.cloudfoundry.org/quarks-utils/pkg/pointers"
 	"github.com/pkg/errors"
-	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	extv1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	extv1client "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -61,26 +60,22 @@ func (b *Builder) Build() *Builder {
 			Group:                 b.groupVersion.Group,
 			Names:                 b.names,
 			Scope:                 extv1.NamespaceScoped,
-			PreserveUnknownFields: pointers.Bool(false),
+			PreserveUnknownFields: false,
 			Versions: []extv1.CustomResourceDefinitionVersion{
 				{
 					Name:    b.groupVersion.Version,
 					Served:  true,
 					Storage: true,
+					Schema:  b.validation,
 				},
 			},
-			Validation: b.validation,
-			Subresources: &extv1.CustomResourceSubresources{
-				Status: &extv1.CustomResourceSubresourceStatus{},
-			},
-			AdditionalPrinterColumns: b.additionalPrinterColumns,
 		},
 	}
 	return b
 }
 
 // Apply CRD to cluster
-func (b *Builder) Apply(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface) error {
+func (b *Builder) Apply(ctx context.Context, client extv1client.ApiextensionsV1Interface) error {
 	existing, err := client.CustomResourceDefinitions().Get(ctx, b.crdName, metav1.GetOptions{})
 	if err != nil {
 		if !apierrors.IsNotFound(err) {
@@ -105,7 +100,7 @@ func (b *Builder) Apply(ctx context.Context, client extv1client.ApiextensionsV1b
 }
 
 // ApplyCRD creates or updates the CRD - old func for compatibility
-func ApplyCRD(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error {
+func ApplyCRD(ctx context.Context, client extv1client.ApiextensionsV1Interface, crdName, kind, plural string, shortNames []string, groupVersion schema.GroupVersion, validation *extv1.CustomResourceValidation) error {
 	b := New(
 		crdName,
 		extv1.CustomResourceDefinitionNames{
@@ -119,7 +114,7 @@ func ApplyCRD(ctx context.Context, client extv1client.ApiextensionsV1beta1Interf
 }
 
 // WaitForCRDReady blocks until the CRD is ready.
-func WaitForCRDReady(ctx context.Context, client extv1client.ApiextensionsV1beta1Interface, crdName string) error {
+func WaitForCRDReady(ctx context.Context, client extv1client.ApiextensionsV1Interface, crdName string) error {
 	err := wait.ExponentialBackoff(
 		wait.Backoff{
 			Duration: time.Second,
